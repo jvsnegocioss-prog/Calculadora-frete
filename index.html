@@ -38,7 +38,20 @@
       <div class="fields">
         <div class="field full"><label for="vehicle">Veículo / configuração</label><select id="vehicle"><option>Carreta LS</option><option>Bitrem</option><option>Rodotrem</option><option>Truck</option><option>Toco</option><option>Outro</option></select></div>
         <div class="field"><label for="freight">Frete oferecido (R$)</label><input id="freight" type="number" min="0" step="0.01" value="10000"></div>
-        <div class="field"><label for="loadType">Tipo de carga</label><select id="loadType"><option>Carga geral</option><option>Granel sólido</option><option>Granel líquido</option><option>Frigorificada</option><option>Perigosa</option><option>Neogranel</option><option>Conteinerizada</option><option>Outra</option></select></div>
+        <div class="field"><label for="loadType">Tipo de carga</label><select id="loadType">
+<option value="Carga Geral">Carga geral</option>
+<option value="Granel sólido">Granel sólido</option>
+<option value="Granel líquido">Granel líquido</option>
+<option value="Frigorificada ou Aquecida">Frigorificada ou aquecida</option>
+<option value="Conteinerizada">Conteinerizada</option>
+<option value="Neogranel">Neogranel</option>
+<option value="Perigosa (granel sólido)">Perigosa (granel sólido)</option>
+<option value="Perigosa (granel líquido)">Perigosa (granel líquido)</option>
+<option value="Perigosa (frigorificada ou aquecida)">Perigosa (frigorificada ou aquecida)</option>
+<option value="Perigosa (conteinerizada)">Perigosa (conteinerizada)</option>
+<option value="Perigosa (carga geral)">Perigosa (carga geral)</option>
+<option value="Carga Granel Pressurizada">Carga granel pressurizada</option>
+</select></div>
         <div class="field"><label for="outKm">Distância de ida (km)</label><input id="outKm" type="number" min="0" step="1" value="800"></div>
         <div class="field"><label for="backKm">Distância de retorno (km)</label><input id="backKm" type="number" min="0" step="1" value="800"></div>
         <div class="field full"><label for="returnType">Situação do retorno</label><select id="returnType"><option value="empty">Vazio / sem frete de retorno</option><option value="loaded">Carregado com frete de retorno</option><option value="partial">Retorno parcial com frete</option></select><p class="hint" id="returnHint">O custo da distância de retorno é considerado mesmo sem faturamento de volta.</p></div>
@@ -105,24 +118,37 @@
         <div class="cost-row total"><span>Custo total estimado</span><strong id="detailTotal">R$ 0,00</strong></div>
       </div>
       <p class="small-help">O rateio dos custos fixos é uma parcela estimada do custo mensal distribuída pelos quilômetros da viagem. Evite lançar a mesma despesa também em outros custos variáveis.</p>
-      <div class="antt"><strong>Conferência do piso mínimo da ANTT</strong><p>Esta versão ainda não consulta automaticamente os coeficientes oficiais. Não use este painel como confirmação de conformidade legal. Na próxima etapa, vamos adicionar a tabela vigente conforme carga, eixos carregados e tipo de operação.</p></div>
+      <div class="antt" id="anttPanel">
+<strong>Conferência do piso mínimo da ANTT</strong>
+<p>Carreta LS, 5 eixos carregados, contratação somente da unidade de tração. Selecione a classificação da operação para usar a tabela correta.</p>
+<div class="field full" style="margin-top:12px"><label for="operationType">Classificação da operação</label>
+<select id="operationType"><option value="unknown">Não sei / confirmar antes de usar</option><option value="standard">Operação convencional (Tabela B)</option><option value="high">Alto desempenho (Tabela D)</option></select></div>
+<div class="results wide-result">
+<div class="metric"><div class="label">Tabela ANTT aplicada</div><strong id="anttTable">Pendente</strong></div>
+<div class="metric"><div class="label">Distância usada no piso</div><strong id="anttDistance">—</strong></div>
+<div class="metric"><div class="label">Piso mínimo estimado</div><strong id="anttFloor">—</strong></div>
+<div class="metric"><div class="label">Comparação com frete de ida</div><strong id="anttCompare">—</strong></div>
+</div>
+<div id="anttStatus" class="status warn">Confirme a classificação operacional para calcular o piso mínimo.</div>
+<p class="small-help">Usa a distância de ida, 5 eixos carregados e a categoria selecionada. O frete de retorno e os custos operacionais não entram nesta fórmula. Confirme a classificação legal antes de usar o resultado em contrato.</p>
+</div>
       <div class="actions"><button class="btn" id="recalc">Recalcular</button><button class="btn2" id="reset">Restaurar exemplo</button><button class="btn2" id="clearSaved">Apagar dados salvos</button><button class="btn2" id="share">Compartilhar resumo</button></div><p id="saveStatus" class="small-help" role="status">Seus dados são salvos neste aparelho.</p>
       <p class="note">Estimativa operacional, não uma cotação oficial. O cálculo considera o retorno informado e custos digitados; confirme as despesas reais, tributos e condições do contrato.</p>
     </section>
   </div>
 </main>
-<footer>Calculadora de Frete • versão 0.4 • configurações salvas neste dispositivo</footer>
+<footer>Calculadora de Frete • versão 0.5 • configurações salvas neste dispositivo</footer>
 <script>
 const storageKey='calculadoraFreteConfigV04';
-const defaults={vehicle:'Carreta LS',freight:10000,loadType:'Carga geral',outKm:800,backKm:800,returnType:'empty',returnFreight:0,hours:30,consumption:2.5,diesel:6.2,arla:150,toll:800,maintenance:0.63,trip:250,otherVariable:0,monthlyFinancing:4000,monthlyInsurance:500,monthlyTracking:150,monthlyAnnualFees:350,monthlyDriver:800,monthlyOtherFixed:200,fixedMonthly:6000,monthlyKm:10000,taxPercent:0,margin:20};
+const defaults={vehicle:'Carreta LS',freight:10000,loadType:'Carga Geral',outKm:800,backKm:800,returnType:'empty',returnFreight:0,hours:30,consumption:2.5,diesel:6.2,arla:150,toll:800,maintenance:0.63,trip:250,otherVariable:0,monthlyFinancing:4000,monthlyInsurance:500,monthlyTracking:150,monthlyAnnualFees:350,monthlyDriver:800,monthlyOtherFixed:200,fixedMonthly:6000,monthlyKm:10000,taxPercent:0,margin:20};
 const ids=Object.keys(defaults);
 const $=id=>document.getElementById(id);
 const num=id=>Math.max(0,Number($(id).value)||0);
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number.isFinite(n)?n:0);
 const pct=n=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(Number.isFinite(n)?n:0)+'%';
 function totalFixedCosts(){const total=['monthlyFinancing','monthlyInsurance','monthlyTracking','monthlyAnnualFees','monthlyDriver','monthlyOtherFixed'].reduce((sum,id)=>sum+num(id),0);$('fixedMonthly').value=total.toFixed(2);return total;}
-function saveSettings(){try{const data={};ids.forEach(id=>{data[id]=$(id).value});localStorage.setItem(storageKey,JSON.stringify(data));$('saveStatus').textContent='✓ Dados salvos neste aparelho. Você pode editá-los quando precisar.';}catch(e){$('saveStatus').textContent='Não foi possível salvar neste navegador. Verifique as configurações de privacidade.';}}
-function loadSettings(){try{const saved=JSON.parse(localStorage.getItem(storageKey)||'null');const values={...defaults,...(saved&&typeof saved==='object'?saved:{})};Object.entries(values).forEach(([id,value])=>{if($(id))$(id).value=value;});}catch(e){Object.entries(defaults).forEach(([id,value])=>{if($(id))$(id).value=value;});}totalFixedCosts();}
+function saveSettings(){try{const data={};ids.forEach(id=>{data[id]=$(id).value});data.operationType=$('operationType').value;localStorage.setItem(storageKey,JSON.stringify(data));$('saveStatus').textContent='✓ Dados salvos neste aparelho. Você pode editá-los quando precisar.';}catch(e){$('saveStatus').textContent='Não foi possível salvar neste navegador. Verifique as configurações de privacidade.';}}
+function loadSettings(){try{const saved=JSON.parse(localStorage.getItem(storageKey)||'null');const values={...defaults,...(saved&&typeof saved==='object'?saved:{})};Object.entries(values).forEach(([id,value])=>{if($(id))$(id).value=value;});$('operationType').value=(saved&&saved.operationType)||'unknown';}catch(e){Object.entries(defaults).forEach(([id,value])=>{if($(id))$(id).value=value;});}totalFixedCosts();}
 function calc(){
  const km=num('outKm')+num('backKm'), freight=num('freight')+num('returnFreight');
  const litres=num('consumption')>0?km/num('consumption'):0;
@@ -143,15 +169,54 @@ function calc(){
  else if(margin<num('margin')){s.classList.add('warn');s.textContent='Há sobra estimada, mas a margem está abaixo da meta definida.'}
  else{s.classList.add('good');s.textContent='Atinge a meta de margem informada, com base nos custos preenchidos.'}
 }
-function updateAndSave(){totalFixedCosts();calc();saveSettings();}
+
+// Portaria SUROC nº 22/2026, contratação apenas da unidade de tração, 5 eixos carregados.
+// Tabela B = operação convencional; Tabela D = operação de alto desempenho.
+const anttCoefficients = {
+ standard: {table:'B',
+ 'Granel sólido':[6.0900,594.62], 'Granel líquido':[6.1551,594.62],
+ 'Frigorificada ou Aquecida':[7.1428,645.26], 'Conteinerizada':[6.0900,594.62],
+ 'Carga Geral':[6.0900,594.62], 'Neogranel':[6.0900,594.62],
+ 'Perigosa (granel sólido)':[6.9067,750.65], 'Perigosa (granel líquido)':[6.9518,763.06],
+ 'Perigosa (frigorificada ou aquecida)':[7.7801,766.25],
+ 'Perigosa (conteinerizada)':[6.5111,700.42], 'Perigosa (carga geral)':[6.5111,700.42],
+ 'Carga Granel Pressurizada':[6.0900,594.62]},
+ high: {table:'D',
+ 'Granel sólido':[5.2278,214.52], 'Granel líquido':[5.2929,214.52],
+ 'Frigorificada ou Aquecida':[6.2949,247.25], 'Conteinerizada':[5.2278,214.52],
+ 'Carga Geral':[5.2278,214.52], 'Neogranel':[5.2278,214.52],
+ 'Perigosa (granel sólido)':[5.8131,269.96], 'Perigosa (granel líquido)':[5.8293,272.63],
+ 'Perigosa (frigorificada ou aquecida)':[6.8222,301.69],
+ 'Perigosa (conteinerizada)':[5.5346,259.14], 'Perigosa (carga geral)':[5.5346,259.14],
+ 'Carga Granel Pressurizada':[5.2278,214.52]}
+};
+function calcAntt(){
+ const op=$('operationType').value, km=num('outKm'), freight=num('freight'), status=$('anttStatus');
+ $('anttDistance').textContent=km>0?new Intl.NumberFormat('pt-BR').format(km)+' km (ida)':'Informe a distância';
+ if(op==='unknown'){
+  $('anttTable').textContent='Pendente';$('anttFloor').textContent='—';$('anttCompare').textContent='—';
+  status.className='status warn';status.textContent='Não calculado: confirme se a operação é convencional ou de alto desempenho. Não presuma a Tabela D.';return;
+ }
+ const row=anttCoefficients[op], vals=row[$('loadType').value];
+ if(!vals||km<=0){$('anttTable').textContent='Tabela '+row.table;$('anttFloor').textContent='—';$('anttCompare').textContent='—';status.className='status warn';status.textContent='Informe uma distância de ida válida.';return;}
+ const [ccd,cc]=vals, floor=km*ccd+cc;
+ $('anttTable').textContent='Tabela '+row.table;$('anttFloor').textContent=money(floor);
+ $('anttCompare').textContent=freight>=floor?'Acima do piso':'Abaixo do piso';
+ status.className='status '+(freight>=floor?'good':'bad');
+ status.textContent='CCD '+money(ccd)+'/km + CC '+money(cc)+'. Comparação com o frete de ida. Referência de cálculo: confirme a classificação da operação e a aplicação da tabela oficial.';
+}
+
+function updateAndSave(){totalFixedCosts();calc();calcAntt();saveSettings();}
 loadSettings();
 ids.filter(id=>id!=='fixedMonthly').forEach(id=>$(id).addEventListener('input',updateAndSave));
 document.querySelectorAll('[data-fixed-cost]').forEach(el=>el.addEventListener('input',updateAndSave));
-$('recalc').addEventListener('click',()=>{totalFixedCosts();calc();saveSettings();});
-$('reset').addEventListener('click',()=>{Object.entries(defaults).forEach(([id,value])=>$(id).value=value);totalFixedCosts();calc();saveSettings();});
-$('clearSaved').addEventListener('click',()=>{if(confirm('Apagar os dados salvos neste aparelho e restaurar os valores de exemplo?')){try{localStorage.removeItem(storageKey);}catch(e){}Object.entries(defaults).forEach(([id,value])=>$(id).value=value);totalFixedCosts();calc();saveSettings();$('saveStatus').textContent='Dados anteriores apagados; valores de exemplo salvos novamente.';}});
-$('share').addEventListener('click',async()=>{const summary=`Calculadora de Frete\nFaturamento bruto total: ${$('revenue').textContent}\nFrete de ida: ${money(num('freight'))}\nFrete de retorno: ${money(num('returnFreight'))}\nDistância total: ${$('totalKm').textContent}\nCustos estimados: ${$('totalCost').textContent}\nResultado estimado: ${$('profit').textContent}\nCusto/km: ${$('cpk').textContent}\nMargem: ${$('actualMargin').textContent}\nObservação: estimativa; piso ANTT ainda não verificado.`;try{if(navigator.share)await navigator.share({title:'Resumo do frete',text:summary});else{await navigator.clipboard.writeText(summary);alert('Resumo copiado.')}}catch(e){}});
+$('recalc').addEventListener('click',()=>{totalFixedCosts();calc();calcAntt();saveSettings();});
+$('reset').addEventListener('click',()=>{Object.entries(defaults).forEach(([id,value])=>$(id).value=value);$('operationType').value='unknown';totalFixedCosts();calc();calcAntt();saveSettings();});
+$('clearSaved').addEventListener('click',()=>{if(confirm('Apagar os dados salvos neste aparelho e restaurar os valores de exemplo?')){try{localStorage.removeItem(storageKey);}catch(e){}Object.entries(defaults).forEach(([id,value])=>$(id).value=value);$('operationType').value='unknown';totalFixedCosts();calc();calcAntt();saveSettings();$('saveStatus').textContent='Dados anteriores apagados; valores de exemplo salvos novamente.';}});
+$('share').addEventListener('click',async()=>{const summary=`Calculadora de Frete\nFaturamento bruto total: ${$('revenue').textContent}\nFrete de ida: ${money(num('freight'))}\nFrete de retorno: ${money(num('returnFreight'))}\nDistância total: ${$('totalKm').textContent}\nCustos estimados: ${$('totalCost').textContent}\nResultado estimado: ${$('profit').textContent}\nCusto/km: ${$('cpk').textContent}\nMargem: ${$('actualMargin').textContent}\nPiso ANTT exibido: ${$('anttFloor').textContent}; confirme a classificação.`;try{if(navigator.share)await navigator.share({title:'Resumo do frete',text:summary});else{await navigator.clipboard.writeText(summary);alert('Resumo copiado.')}}catch(e){}});
 calc();
+calcAntt();
+$('operationType').addEventListener('change',()=>{calcAntt();saveSettings();});
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
 </body></html>
