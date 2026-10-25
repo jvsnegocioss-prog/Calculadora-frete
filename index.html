@@ -72,6 +72,7 @@
     <section class="card results-card">
       <h2><span class="num">4</span> Resultado da viagem</h2>
       <div class="results">
+        <div class="metric primary"><div class="label">Faturamento bruto total</div><strong id="revenue">R$ 0,00</strong></div>
         <div class="metric primary"><div class="label">Resultado estimado</div><strong id="profit">R$ 0,00</strong></div>
         <div class="metric"><div class="label">Custo total estimado</div><strong id="totalCost">R$ 0,00</strong></div>
         <div class="metric"><div class="label">Custo por km total</div><strong id="cpk">R$ 0,00</strong></div>
@@ -88,7 +89,7 @@
     </section>
   </div>
 </main>
-<footer>Calculadora de Frete • versão inicial 0.1 • seus cálculos são feitos neste dispositivo</footer>
+<footer>Calculadora de Frete • versão 0.2 • seus cálculos são feitos neste dispositivo</footer>
 <script>
 const ids=['freight','outKm','backKm','returnFreight','hours','consumption','diesel','arla','toll','maintenance','trip','otherVariable','fixedMonthly','monthlyKm','taxPercent','margin','returnType'];
 const $=id=>document.getElementById(id);
@@ -107,7 +108,7 @@ function calc(){
  // Solve F - costs excluding percentage tax - F*taxRate = target*F.
  const taxRate=Math.min(1,num('taxPercent')/100);
  const targetFreight=(subtotal/(1-taxRate-target))>=0 && (1-taxRate-target)>0?subtotal/(1-taxRate-target):0;
- $('profit').textContent=money(profit); $('totalCost').textContent=money(total); $('cpk').textContent=money(km>0?total/km:0);
+ $('revenue').textContent=money(freight); $('profit').textContent=money(profit); $('totalCost').textContent=money(total); $('cpk').textContent=money(km>0?total/km:0);
  $('actualMargin').textContent=pct(margin); $('totalKm').textContent=new Intl.NumberFormat('pt-BR').format(km)+' km'; $('fuelCost').textContent=money(fuel);
  $('perHour').textContent=money(perHour); $('targetFreight').textContent=money(targetFreight);
  const s=$('status');s.className='status';
@@ -119,7 +120,7 @@ function calc(){
 ids.forEach(id=>$(id).addEventListener('input',calc));
 $('recalc').addEventListener('click',calc);
 $('reset').addEventListener('click',()=>{const defaults={freight:10000,outKm:800,backKm:800,returnFreight:0,hours:30,consumption:2.5,diesel:6.2,arla:150,toll:800,maintenance:0.63,trip:250,otherVariable:0,fixedMonthly:6000,monthlyKm:10000,taxPercent:0,margin:20,returnType:'empty'};Object.entries(defaults).forEach(([k,v])=>$(k).value=v);calc()});
-$('share').addEventListener('click',async()=>{const summary=`Calculadora de Frete\nFrete bruto + retorno: ${money(num('freight')+num('returnFreight'))}\nDistância total: ${$('totalKm').textContent}\nCustos estimados: ${$('totalCost').textContent}\nResultado estimado: ${$('profit').textContent}\nCusto/km: ${$('cpk').textContent}\nMargem: ${$('actualMargin').textContent}\nObservação: estimativa; piso ANTT ainda não verificado.`;try{if(navigator.share)await navigator.share({title:'Resumo do frete',text:summary});else{await navigator.clipboard.writeText(summary);alert('Resumo copiado.')}}catch(e){}});
+$('share').addEventListener('click',async()=>{const summary=`Calculadora de Frete\nFaturamento bruto total: ${$('revenue').textContent}\nFrete de ida: ${money(num('freight'))}\nFrete de retorno: ${money(num('returnFreight'))}\nDistância total: ${$('totalKm').textContent}\nCustos estimados: ${$('totalCost').textContent}\nResultado estimado: ${$('profit').textContent}\nCusto/km: ${$('cpk').textContent}\nMargem: ${$('actualMargin').textContent}\nObservação: estimativa; piso ANTT ainda não verificado.`;try{if(navigator.share)await navigator.share({title:'Resumo do frete',text:summary});else{await navigator.clipboard.writeText(summary);alert('Resumo copiado.')}}catch(e){}});
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 calc();
 </script>

@@ -1,4 +1,4 @@
-# Calculadora de Frete — PWA v0.1
+# Calculadora de Frete — PWA v0.2
 
 ## Arquivos
 - `index.html`: tela responsiva e cálculos da primeira versão.
@@ -25,3 +25,9 @@
 - Custo fixo da viagem = custos fixos mensais / km mensais × distância total.
 - Custo total estimado = custos variáveis + custos fixos proporcionais + impostos/comissões sobre o frete.
 - Resultado estimado = frete de ida + frete de retorno − custo total estimado.
+
+
+## Versão 0.2
+- Adicionado o indicador de faturamento bruto total (frete de ida + frete de retorno).
+- Resumo compartilhado agora discrimina faturamento, frete de ida e frete de retorno.
+- Cache do service worker atualizado para carregar a nova versão.
