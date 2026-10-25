@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#102a43">
+  <meta name="application-name" content="Calculadora de Frete">
   <meta name="description" content="Calcule custos, lucro e viabilidade de fretes rodoviários.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png">
@@ -60,14 +61,21 @@
     </section>
     <section class="card">
       <h2><span class="num">3</span> Custos fixos e meta</h2>
-      <p class="section-intro">Os custos mensais são distribuídos pelos quilômetros rodados no mês.</p>
+      <p class="section-intro">Cadastre cada despesa mensal. A soma é calculada automaticamente e distribuída pelos quilômetros da viagem. Seus dados ficam salvos neste aparelho e podem ser alterados a qualquer momento.</p>
+      <h3 style="font-size:14px;margin:0 0 10px">Despesas fixas mensais</h3>
       <div class="fields">
-        <div class="field"><label for="fixedMonthly">Custos fixos mensais (R$)</label><input id="fixedMonthly" type="number" min="0" step="0.01" value="6000"></div>
-        <div class="field"><label for="monthlyKm">Km rodados por mês</label><input id="monthlyKm" type="number" min="1" step="100" value="10000"></div>
+        <div class="field"><label for="monthlyFinancing">Financiamento / parcela (R$)</label><input id="monthlyFinancing" data-fixed-cost type="number" min="0" step="0.01" value="4000"></div>
+        <div class="field"><label for="monthlyInsurance">Seguro (R$)</label><input id="monthlyInsurance" data-fixed-cost type="number" min="0" step="0.01" value="500"></div>
+        <div class="field"><label for="monthlyTracking">Rastreador (R$)</label><input id="monthlyTracking" data-fixed-cost type="number" min="0" step="0.01" value="150"></div>
+        <div class="field"><label for="monthlyAnnualFees">IPVA, licenciamento e taxas provisionadas (R$)</label><input id="monthlyAnnualFees" data-fixed-cost type="number" min="0" step="0.01" value="350"></div>
+        <div class="field"><label for="monthlyDriver">Remuneração do motorista (R$)</label><input id="monthlyDriver" data-fixed-cost type="number" min="0" step="0.01" value="800"></div>
+        <div class="field"><label for="monthlyOtherFixed">Outros custos fixos (R$)</label><input id="monthlyOtherFixed" data-fixed-cost type="number" min="0" step="0.01" value="200"></div>
+        <div class="field full"><label for="fixedMonthly">Total de custos fixos mensais (calculado automaticamente)</label><input id="fixedMonthly" type="number" min="0" step="0.01" value="6000" readonly aria-readonly="true"></div>
+        <div class="field full"><label for="monthlyKm">Quilômetros rodados por mês</label><input id="monthlyKm" type="number" min="1" step="100" value="10000"></div>
         <div class="field"><label for="taxPercent">Impostos/comissões (%)</label><input id="taxPercent" type="number" min="0" max="100" step="0.5" value="0"></div>
         <div class="field"><label for="margin">Margem de lucro desejada (%)</label><input id="margin" type="number" min="0" max="90" step="1" value="20"></div>
       </div>
-      <p class="note">Inclua nos custos fixos a parcela, seguro, rastreador, impostos anuais provisionados e remuneração do motorista, quando aplicáveis.</p>
+      <p class="note">Edite os valores quando suas despesas mudarem. Não inclua aqui diesel, pedágios ou manutenção por quilômetro se eles já forem calculados na seção de custos variáveis. Os dados ficam apenas neste navegador/aparelho; não são sincronizados entre dispositivos.</p>
     </section>
     <section class="card results-card">
       <h2><span class="num">4</span> Resultado da viagem</h2>
@@ -98,18 +106,23 @@
       </div>
       <p class="small-help">O rateio dos custos fixos é uma parcela estimada do custo mensal distribuída pelos quilômetros da viagem. Evite lançar a mesma despesa também em outros custos variáveis.</p>
       <div class="antt"><strong>Conferência do piso mínimo da ANTT</strong><p>Esta versão ainda não consulta automaticamente os coeficientes oficiais. Não use este painel como confirmação de conformidade legal. Na próxima etapa, vamos adicionar a tabela vigente conforme carga, eixos carregados e tipo de operação.</p></div>
-      <div class="actions"><button class="btn" id="recalc">Recalcular</button><button class="btn2" id="reset">Restaurar exemplo</button><button class="btn2" id="share">Compartilhar resumo</button></div>
+      <div class="actions"><button class="btn" id="recalc">Recalcular</button><button class="btn2" id="reset">Restaurar exemplo</button><button class="btn2" id="clearSaved">Apagar dados salvos</button><button class="btn2" id="share">Compartilhar resumo</button></div><p id="saveStatus" class="small-help" role="status">Seus dados são salvos neste aparelho.</p>
       <p class="note">Estimativa operacional, não uma cotação oficial. O cálculo considera o retorno informado e custos digitados; confirme as despesas reais, tributos e condições do contrato.</p>
     </section>
   </div>
 </main>
-<footer>Calculadora de Frete • versão 0.3 • seus cálculos são feitos neste dispositivo</footer>
+<footer>Calculadora de Frete • versão 0.4 • configurações salvas neste dispositivo</footer>
 <script>
-const ids=['freight','outKm','backKm','returnFreight','hours','consumption','diesel','arla','toll','maintenance','trip','otherVariable','fixedMonthly','monthlyKm','taxPercent','margin','returnType'];
+const storageKey='calculadoraFreteConfigV04';
+const defaults={vehicle:'Carreta LS',freight:10000,loadType:'Carga geral',outKm:800,backKm:800,returnType:'empty',returnFreight:0,hours:30,consumption:2.5,diesel:6.2,arla:150,toll:800,maintenance:0.63,trip:250,otherVariable:0,monthlyFinancing:4000,monthlyInsurance:500,monthlyTracking:150,monthlyAnnualFees:350,monthlyDriver:800,monthlyOtherFixed:200,fixedMonthly:6000,monthlyKm:10000,taxPercent:0,margin:20};
+const ids=Object.keys(defaults);
 const $=id=>document.getElementById(id);
 const num=id=>Math.max(0,Number($(id).value)||0);
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number.isFinite(n)?n:0);
 const pct=n=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(Number.isFinite(n)?n:0)+'%';
+function totalFixedCosts(){const total=['monthlyFinancing','monthlyInsurance','monthlyTracking','monthlyAnnualFees','monthlyDriver','monthlyOtherFixed'].reduce((sum,id)=>sum+num(id),0);$('fixedMonthly').value=total.toFixed(2);return total;}
+function saveSettings(){try{const data={};ids.forEach(id=>{data[id]=$(id).value});localStorage.setItem(storageKey,JSON.stringify(data));$('saveStatus').textContent='✓ Dados salvos neste aparelho. Você pode editá-los quando precisar.';}catch(e){$('saveStatus').textContent='Não foi possível salvar neste navegador. Verifique as configurações de privacidade.';}}
+function loadSettings(){try{const saved=JSON.parse(localStorage.getItem(storageKey)||'null');const values={...defaults,...(saved&&typeof saved==='object'?saved:{})};Object.entries(values).forEach(([id,value])=>{if($(id))$(id).value=value;});}catch(e){Object.entries(defaults).forEach(([id,value])=>{if($(id))$(id).value=value;});}totalFixedCosts();}
 function calc(){
  const km=num('outKm')+num('backKm'), freight=num('freight')+num('returnFreight');
  const litres=num('consumption')>0?km/num('consumption'):0;
@@ -118,26 +131,27 @@ function calc(){
  const fixed=km*fixedPerKm, variable=fuel+num('arla')+num('toll')+maint+num('trip')+num('otherVariable');
  const subtotal=variable+fixed, taxes=freight*num('taxPercent')/100, total=subtotal+taxes, profit=freight-total;
  const margin=freight>0?profit/freight*100:0, h=num('hours'), perHour=h>0?profit/h:0;
- const target=num('margin')/100;
- // Solve F - costs excluding percentage tax - F*taxRate = target*F.
- const taxRate=Math.min(1,num('taxPercent')/100);
- const targetFreight=(subtotal/(1-taxRate-target))>=0 && (1-taxRate-target)>0?subtotal/(1-taxRate-target):0;
+ const target=num('margin')/100, taxRate=Math.min(1,num('taxPercent')/100);
+ const targetFreight=(1-taxRate-target)>0?subtotal/(1-taxRate-target):0;
  $('revenue').textContent=money(freight); $('profit').textContent=money(profit); $('totalCost').textContent=money(total); $('cpk').textContent=money(km>0?total/km:0);
  $('detailFuel').textContent=money(fuel); $('detailArla').textContent=money(num('arla')); $('detailToll').textContent=money(num('toll')); $('detailMaintenance').textContent=money(maint); $('detailTrip').textContent=money(num('trip')); $('detailOther').textContent=money(num('otherVariable')); $('detailVariable').textContent=money(variable); $('detailFixed').textContent=money(fixed); $('detailTaxes').textContent=money(taxes); $('detailTotal').textContent=money(total);
  const returnHint=$('returnHint'); if($('returnType').value==='empty'){returnHint.textContent='O custo da distância de retorno é considerado mesmo sem faturamento de volta.';} else if($('returnType').value==='loaded'){returnHint.textContent='Informe o valor recebido pelo frete de retorno; os custos de toda a distância continuam incluídos.';} else {returnHint.textContent='Informe somente o valor de frete efetivamente recebido no retorno parcial; os custos usam a distância total preenchida.';}
- $('actualMargin').textContent=pct(margin); $('totalKm').textContent=new Intl.NumberFormat('pt-BR').format(km)+' km'; $('fuelCost').textContent=money(fuel);
- $('perHour').textContent=money(perHour); $('targetFreight').textContent=money(targetFreight);
+ $('actualMargin').textContent=pct(margin); $('totalKm').textContent=new Intl.NumberFormat('pt-BR').format(km)+' km'; $('fuelCost').textContent=money(fuel); $('perHour').textContent=money(perHour); $('targetFreight').textContent=money(targetFreight);
  const s=$('status');s.className='status';
  if(km<=0){s.textContent='Informe a distância de ida ou retorno para calcular.'}
  else if(profit<0){s.classList.add('bad');s.textContent='Prejuízo estimado: o frete não cobre os custos informados.'}
  else if(margin<num('margin')){s.classList.add('warn');s.textContent='Há sobra estimada, mas a margem está abaixo da meta definida.'}
  else{s.classList.add('good');s.textContent='Atinge a meta de margem informada, com base nos custos preenchidos.'}
 }
-ids.forEach(id=>$(id).addEventListener('input',calc));
-$('recalc').addEventListener('click',calc);
-$('reset').addEventListener('click',()=>{const defaults={freight:10000,outKm:800,backKm:800,returnFreight:0,hours:30,consumption:2.5,diesel:6.2,arla:150,toll:800,maintenance:0.63,trip:250,otherVariable:0,fixedMonthly:6000,monthlyKm:10000,taxPercent:0,margin:20,returnType:'empty'};Object.entries(defaults).forEach(([k,v])=>$(k).value=v);calc()});
+function updateAndSave(){totalFixedCosts();calc();saveSettings();}
+loadSettings();
+ids.filter(id=>id!=='fixedMonthly').forEach(id=>$(id).addEventListener('input',updateAndSave));
+document.querySelectorAll('[data-fixed-cost]').forEach(el=>el.addEventListener('input',updateAndSave));
+$('recalc').addEventListener('click',()=>{totalFixedCosts();calc();saveSettings();});
+$('reset').addEventListener('click',()=>{Object.entries(defaults).forEach(([id,value])=>$(id).value=value);totalFixedCosts();calc();saveSettings();});
+$('clearSaved').addEventListener('click',()=>{if(confirm('Apagar os dados salvos neste aparelho e restaurar os valores de exemplo?')){try{localStorage.removeItem(storageKey);}catch(e){}Object.entries(defaults).forEach(([id,value])=>$(id).value=value);totalFixedCosts();calc();saveSettings();$('saveStatus').textContent='Dados anteriores apagados; valores de exemplo salvos novamente.';}});
 $('share').addEventListener('click',async()=>{const summary=`Calculadora de Frete\nFaturamento bruto total: ${$('revenue').textContent}\nFrete de ida: ${money(num('freight'))}\nFrete de retorno: ${money(num('returnFreight'))}\nDistância total: ${$('totalKm').textContent}\nCustos estimados: ${$('totalCost').textContent}\nResultado estimado: ${$('profit').textContent}\nCusto/km: ${$('cpk').textContent}\nMargem: ${$('actualMargin').textContent}\nObservação: estimativa; piso ANTT ainda não verificado.`;try{if(navigator.share)await navigator.share({title:'Resumo do frete',text:summary});else{await navigator.clipboard.writeText(summary);alert('Resumo copiado.')}}catch(e){}});
-if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 calc();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
 </body></html>

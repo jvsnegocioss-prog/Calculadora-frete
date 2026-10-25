@@ -1,40 +1,22 @@
-# Calculadora de Frete — PWA v0.3
+# Calculadora de Frete — PWA v0.4
 
 ## Arquivos
-- `index.html`: tela responsiva e cálculos da primeira versão.
-- `manifest.webmanifest`: configura o site como instalável.
-- `sw.js`: cache básico para abrir a interface offline depois do primeiro acesso.
+- `index.html`: interface responsiva, custos mensais detalhados e cálculos.
+- `manifest.webmanifest`: configuração de instalação como PWA.
+- `sw.js`: cache offline com versão atualizado.
 - `icon-192.png` e `icon-512.png`: ícones do PWA.
 
-## Como testar
-1. Publique estes arquivos em um host com HTTPS (por exemplo, GitHub Pages).
-2. Abra o endereço no navegador do celular.
-3. No iPhone, use Compartilhar > Adicionar à Tela de Início. No Android, use o menu do navegador > Instalar app/Adicionar à tela inicial.
-4. Faça uma simulação e confira os custos inseridos.
+## Novidades da versão 0.4
+- Cadastro separado de financiamento, seguro, rastreador, taxas anuais provisionadas, remuneração do motorista e outros custos fixos.
+- Soma automática dos custos fixos mensais e rateio por quilômetro.
+- Salvamento automático no armazenamento local do navegador/aparelho (`localStorage`). Os dados podem ser editados a qualquer momento.
+- Botão para apagar os dados salvos e restaurar valores de exemplo.
+- O salvamento é local: não sincroniza entre dispositivos nem substitui backup.
 
-## Limitações desta versão
-- A conferência da ANTT ainda não está automatizada. O aplicativo não afirma que um frete está legalmente conforme a tabela.
-- O valor de “frete mínimo para sua meta” é uma estimativa matemática a partir dos custos informados e da meta de margem.
-- Pedágios, distância, consumo, tributos e custos devem ser conferidos pelo usuário.
-- O modo offline depende do primeiro carregamento bem-sucedido e do suporte do navegador.
+## Como atualizar
+Publique os arquivos deste pacote no repositório existente, substituindo os arquivos com o mesmo nome. Não é necessário criar outro repositório.
 
-## Fórmulas principais
-- Distância total = ida + retorno.
-- Litros estimados = distância total / consumo médio (km/L).
-- Custo de combustível = litros estimados × preço do diesel.
-- Custo fixo da viagem = custos fixos mensais / km mensais × distância total.
-- Custo total estimado = custos variáveis + custos fixos proporcionais + impostos/comissões sobre o frete.
-- Resultado estimado = frete de ida + frete de retorno − custo total estimado.
-
-
-## Versão 0.2
-- Adicionado o indicador de faturamento bruto total (frete de ida + frete de retorno).
-- Resumo compartilhado agora discrimina faturamento, frete de ida e frete de retorno.
-- Cache do service worker atualizado para carregar a nova versão.
-
-
-## Versão 0.3
-- Adicionado detalhamento dos custos variáveis, custos fixos rateados e impostos/comissões.
-- Adicionado texto explicativo sobre o custo do retorno vazio, carregado ou parcial.
-- Atualizado o cache do service worker para a versão 0.3.
-- A tabela da ANTT continua sendo apenas informativa; a consulta oficial automatizada ainda não foi implementada.
+## Limitações
+- A conferência automática dos coeficientes oficiais da ANTT ainda não está implementada.
+- Resultados são estimativas e dependem da precisão dos valores informados.
+- O armazenamento local depende das configurações do navegador; limpar os dados do site pode apagar as configurações salvas.
