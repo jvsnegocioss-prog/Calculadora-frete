@@ -21,7 +21,7 @@
     input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #176b871a}.hint{font-size:11px;color:var(--muted);margin-top:5px}
     .results{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:#f5f8fa;border:1px solid var(--line);padding:13px;border-radius:13px;min-width:0}.metric .label{font-size:12px;color:var(--muted);font-weight:650}.metric strong{display:block;font-size:21px;letter-spacing:-.5px;margin-top:5px;overflow-wrap:anywhere}.metric.primary{background:var(--navy);color:white;border-color:var(--navy)}.metric.primary .label{color:#d5e4ed}.metric.primary strong{font-size:25px}.status{padding:12px 13px;border-radius:12px;font-size:13px;font-weight:700;margin-top:12px;background:#edf2f5;color:#445967}.status.good{background:#e5f5eb;color:var(--green)}.status.warn{background:#fff2df;color:var(--amber)}.status.bad{background:#fde9e7;color:var(--red)}
     .note{font-size:12px;color:var(--muted);margin:12px 0 0}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button{border:0;border-radius:11px;padding:12px 15px;font:inherit;font-size:14px;font-weight:750;cursor:pointer}.btn{background:var(--blue);color:white}.btn2{background:#e8eef2;color:var(--navy)}footer{font-size:12px;color:var(--muted);padding:0 14px 28px;text-align:center}
-    .section-intro{font-size:13px;color:var(--muted);margin:-7px 0 14px}.wide-result{margin-top:14px}.antt{border:1px dashed #a7bac6;background:#f7fafb;border-radius:13px;padding:13px;margin-top:12px}.antt strong{font-size:13px}.antt p{font-size:12px;color:var(--muted);margin:5px 0 0}
+    .section-intro{font-size:13px;color:var(--muted);margin:-7px 0 14px}.wide-result{margin-top:14px}.antt{border:1px dashed #a7bac6;background:#f7fafb;border-radius:13px;padding:13px;margin-top:12px}.antt strong{font-size:13px}.antt p{font-size:12px;color:var(--muted);margin:5px 0 0}.breakdown{margin-top:14px;border:1px solid var(--line);border-radius:13px;overflow:hidden}.breakdown h3{font-size:14px;margin:0;padding:12px;background:#f5f8fa}.cost-row{display:flex;justify-content:space-between;gap:12px;padding:9px 12px;border-top:1px solid var(--line);font-size:13px}.cost-row span:first-child{color:var(--muted)}.cost-row strong{text-align:right;white-space:nowrap}.cost-row.total{background:#eef4f7;font-weight:800}.cost-row.total span:first-child{color:var(--ink)}.small-help{font-size:12px;color:var(--muted);margin:8px 0 0}
     @media(min-width:760px){header{padding:30px 24px 34px}h1{font-size:30px}main{padding:24px}.grid{grid-template-columns:1fr 1fr}.results{grid-template-columns:1fr 1fr}.card.results-card{grid-column:1/-1}.card.results-card .results{grid-template-columns:repeat(4,1fr)}}
   </style>
 </head>
@@ -40,7 +40,7 @@
         <div class="field"><label for="loadType">Tipo de carga</label><select id="loadType"><option>Carga geral</option><option>Granel sólido</option><option>Granel líquido</option><option>Frigorificada</option><option>Perigosa</option><option>Neogranel</option><option>Conteinerizada</option><option>Outra</option></select></div>
         <div class="field"><label for="outKm">Distância de ida (km)</label><input id="outKm" type="number" min="0" step="1" value="800"></div>
         <div class="field"><label for="backKm">Distância de retorno (km)</label><input id="backKm" type="number" min="0" step="1" value="800"></div>
-        <div class="field full"><label for="returnType">Situação do retorno</label><select id="returnType"><option value="empty">Vazio / sem frete de retorno</option><option value="loaded">Carregado com frete de retorno</option><option value="partial">Retorno parcial com frete</option></select></div>
+        <div class="field full"><label for="returnType">Situação do retorno</label><select id="returnType"><option value="empty">Vazio / sem frete de retorno</option><option value="loaded">Carregado com frete de retorno</option><option value="partial">Retorno parcial com frete</option></select><p class="hint" id="returnHint">O custo da distância de retorno é considerado mesmo sem faturamento de volta.</p></div>
         <div class="field"><label for="returnFreight">Frete de retorno (R$)</label><input id="returnFreight" type="number" min="0" step="0.01" value="0"></div>
         <div class="field"><label for="hours">Tempo total (horas)</label><input id="hours" type="number" min="0" step="0.5" value="30"></div>
       </div>
@@ -83,13 +83,27 @@
         <div class="metric"><div class="label">Frete mínimo para sua meta</div><strong id="targetFreight">R$ 0,00</strong></div>
       </div>
       <div id="status" class="status">Preencha os dados para avaliar o frete.</div>
+      <div class="breakdown" aria-live="polite">
+        <h3>Detalhamento dos custos estimados</h3>
+        <div class="cost-row"><span>Diesel</span><strong id="detailFuel">R$ 0,00</strong></div>
+        <div class="cost-row"><span>ARLA 32</span><strong id="detailArla">R$ 0,00</strong></div>
+        <div class="cost-row"><span>Pedágios</span><strong id="detailToll">R$ 0,00</strong></div>
+        <div class="cost-row"><span>Manutenção e pneus</span><strong id="detailMaintenance">R$ 0,00</strong></div>
+        <div class="cost-row"><span>Despesas de viagem</span><strong id="detailTrip">R$ 0,00</strong></div>
+        <div class="cost-row"><span>Outros custos variáveis</span><strong id="detailOther">R$ 0,00</strong></div>
+        <div class="cost-row"><span>Total de custos variáveis</span><strong id="detailVariable">R$ 0,00</strong></div>
+        <div class="cost-row"><span>Custos fixos rateados na viagem</span><strong id="detailFixed">R$ 0,00</strong></div>
+        <div class="cost-row"><span>Impostos e comissões estimados</span><strong id="detailTaxes">R$ 0,00</strong></div>
+        <div class="cost-row total"><span>Custo total estimado</span><strong id="detailTotal">R$ 0,00</strong></div>
+      </div>
+      <p class="small-help">O rateio dos custos fixos é uma parcela estimada do custo mensal distribuída pelos quilômetros da viagem. Evite lançar a mesma despesa também em outros custos variáveis.</p>
       <div class="antt"><strong>Conferência do piso mínimo da ANTT</strong><p>Esta versão ainda não consulta automaticamente os coeficientes oficiais. Não use este painel como confirmação de conformidade legal. Na próxima etapa, vamos adicionar a tabela vigente conforme carga, eixos carregados e tipo de operação.</p></div>
       <div class="actions"><button class="btn" id="recalc">Recalcular</button><button class="btn2" id="reset">Restaurar exemplo</button><button class="btn2" id="share">Compartilhar resumo</button></div>
       <p class="note">Estimativa operacional, não uma cotação oficial. O cálculo considera o retorno informado e custos digitados; confirme as despesas reais, tributos e condições do contrato.</p>
     </section>
   </div>
 </main>
-<footer>Calculadora de Frete • versão 0.2 • seus cálculos são feitos neste dispositivo</footer>
+<footer>Calculadora de Frete • versão 0.3 • seus cálculos são feitos neste dispositivo</footer>
 <script>
 const ids=['freight','outKm','backKm','returnFreight','hours','consumption','diesel','arla','toll','maintenance','trip','otherVariable','fixedMonthly','monthlyKm','taxPercent','margin','returnType'];
 const $=id=>document.getElementById(id);
@@ -109,6 +123,8 @@ function calc(){
  const taxRate=Math.min(1,num('taxPercent')/100);
  const targetFreight=(subtotal/(1-taxRate-target))>=0 && (1-taxRate-target)>0?subtotal/(1-taxRate-target):0;
  $('revenue').textContent=money(freight); $('profit').textContent=money(profit); $('totalCost').textContent=money(total); $('cpk').textContent=money(km>0?total/km:0);
+ $('detailFuel').textContent=money(fuel); $('detailArla').textContent=money(num('arla')); $('detailToll').textContent=money(num('toll')); $('detailMaintenance').textContent=money(maint); $('detailTrip').textContent=money(num('trip')); $('detailOther').textContent=money(num('otherVariable')); $('detailVariable').textContent=money(variable); $('detailFixed').textContent=money(fixed); $('detailTaxes').textContent=money(taxes); $('detailTotal').textContent=money(total);
+ const returnHint=$('returnHint'); if($('returnType').value==='empty'){returnHint.textContent='O custo da distância de retorno é considerado mesmo sem faturamento de volta.';} else if($('returnType').value==='loaded'){returnHint.textContent='Informe o valor recebido pelo frete de retorno; os custos de toda a distância continuam incluídos.';} else {returnHint.textContent='Informe somente o valor de frete efetivamente recebido no retorno parcial; os custos usam a distância total preenchida.';}
  $('actualMargin').textContent=pct(margin); $('totalKm').textContent=new Intl.NumberFormat('pt-BR').format(km)+' km'; $('fuelCost').textContent=money(fuel);
  $('perHour').textContent=money(perHour); $('targetFreight').textContent=money(targetFreight);
  const s=$('status');s.className='status';

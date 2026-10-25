@@ -1,4 +1,4 @@
-# Calculadora de Frete — PWA v0.2
+# Calculadora de Frete — PWA v0.3
 
 ## Arquivos
 - `index.html`: tela responsiva e cálculos da primeira versão.
@@ -31,3 +31,10 @@
 - Adicionado o indicador de faturamento bruto total (frete de ida + frete de retorno).
 - Resumo compartilhado agora discrimina faturamento, frete de ida e frete de retorno.
 - Cache do service worker atualizado para carregar a nova versão.
+
+
+## Versão 0.3
+- Adicionado detalhamento dos custos variáveis, custos fixos rateados e impostos/comissões.
+- Adicionado texto explicativo sobre o custo do retorno vazio, carregado ou parcial.
+- Atualizado o cache do service worker para a versão 0.3.
+- A tabela da ANTT continua sendo apenas informativa; a consulta oficial automatizada ainda não foi implementada.
