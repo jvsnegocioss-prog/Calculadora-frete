@@ -54,6 +54,7 @@
 </select></div>
         <div class="field"><label for="outKm">Distância de ida (km)</label><input id="outKm" type="number" min="0" step="1" value="800"></div>
         <div class="field"><label for="backKm">Distância de retorno (km)</label><input id="backKm" type="number" min="0" step="1" value="800"></div>
+        <div class="field full"><label>Quais trechos o cliente está pagando?</label><div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:8px"><label style="font-weight:normal"><input type="checkbox" id="paidOutbound" checked style="width:auto;min-width:auto"> Frete de ida</label><label style="font-weight:normal"><input type="checkbox" id="paidReturn" style="width:auto;min-width:auto"> Frete de volta</label></div><p class="hint">Marque cada trecho que tem pagamento de frete. O piso será conferido separadamente para cada trecho marcado.</p></div>
         <div class="field full"><label for="returnType">Situação do retorno</label><select id="returnType"><option value="empty">Vazio / sem frete de retorno</option><option value="loaded">Carregado com frete de retorno</option><option value="partial">Retorno parcial com frete</option></select><p class="hint" id="returnHint">O custo da distância de retorno é considerado mesmo sem faturamento de volta.</p></div>
         <div class="field"><label for="returnFreight">Valor do frete de volta (R$)</label><input id="returnFreight" type="number" min="0" step="0.01" value="0"></div>
         <div class="field"><label for="hours">Tempo total (horas)</label><input id="hours" type="number" min="0" step="0.5" value="30"></div>
@@ -122,7 +123,6 @@
 <strong>Conferência do piso mínimo da ANTT</strong>
 <p>Escolha o conjunto usado nesta viagem, os eixos carregados e a classificação da operação. A calculadora seleciona a tabela conforme o tipo de contratação.</p>
 <div class="fields" style="margin-top:12px">
-<div class="field full"><label>Quais trechos o cliente está pagando?</label><div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:8px"><label style="font-weight:normal"><input type="checkbox" id="paidOutbound" checked style="width:auto;min-width:auto"> Frete de ida</label><label style="font-weight:normal"><input type="checkbox" id="paidReturn" style="width:auto;min-width:auto"> Frete de volta</label></div><p class="hint">Marque cada trecho que tem pagamento de frete. O piso será conferido separadamente para cada trecho marcado.</p></div>
 <div class="field full"><label for="anttVehicleType">Conjunto contratado</label>
 <select id="anttVehicleType"><option value="complete">Cavalo mecânico + semirreboque (conjunto completo)</option><option value="traction">Somente cavalo mecânico (unidade de tração)</option></select></div>
 <div class="field"><label for="anttAxles">Eixos carregados</label>
