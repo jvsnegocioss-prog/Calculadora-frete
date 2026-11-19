@@ -213,8 +213,9 @@ function calcAntt(){
  }
  const [ccd,cc]=vals;
  const outFloor=outKm>0?outKm*ccd+cc:0, backFloor=backKm>0?backKm*ccd+cc:0;
- const outCompare=outKm>0?(outFreight>=outFloor?'Acima do piso':'Abaixo do piso'):'Informe a distância';
- const backCompare=backKm>0?(backFreight>=backFloor?'Acima do piso':'Abaixo do piso'):'Informe a distância';
+ const compareFreight=(freightValue,floorValue)=>{const difference=Math.round(freightValue*100)-Math.round(floorValue*100);return difference>0?'Acima do piso':difference<0?'Abaixo do piso':'No piso';};
+ const outCompare=outKm>0?compareFreight(outFreight,outFloor):'Informe a distância';
+ const backCompare=backKm>0?compareFreight(backFreight,backFloor):'Informe a distância';
  $('anttTable').textContent='Tabela '+row.table+' • '+vehicleLabel+' • '+axle+' eixos';
  $('anttFloor').textContent=paidOut&&outKm>0?money(outFloor):'Não marcado como pago';
  $('anttCompare').textContent=paidOut&&outKm>0?outCompare:'Não comparar';
@@ -222,10 +223,11 @@ function calcAntt(){
  $('anttReturnCompare').textContent=paidBack&&backKm>0?backCompare:'Não comparar';
  const totalFloor=(paidOut&&outKm>0?outFloor:0)+(paidBack&&backKm>0?backFloor:0);
  $('anttTotalFloor').textContent=(paidOut||paidBack)?money(totalFloor):'Marque os trechos pagos';
- const under=(paidOut&&outKm>0&&outFreight<outFloor)||(paidBack&&backKm>0&&backFreight<backFloor);
+ const under=(paidOut&&outKm>0&&Math.round(outFreight*100)<Math.round(outFloor*100))||(paidBack&&backKm>0&&Math.round(backFreight*100)<Math.round(backFloor*100));
+ const equal=(paidOut&&outKm>0&&Math.round(outFreight*100)===Math.round(outFloor*100))||(paidBack&&backKm>0&&Math.round(backFreight*100)===Math.round(backFloor*100));
  const any=(paidOut&&outKm>0)||(paidBack&&backKm>0);
  status.className='status '+(!any?'warn':under?'bad':'good');
- status.textContent=loadLabel+': CCD '+money(ccd)+'/km + CC '+money(cc)+'. '+(!any?'Marque se o cliente paga a ida, a volta ou ambas.':under?'Pelo menos um trecho marcado como pago está abaixo do piso estimado.':'Os trechos marcados como pagos estão acima do piso estimado. Confirme categoria e enquadramento legal antes de contratar.');
+ status.textContent=loadLabel+': CCD '+money(ccd)+'/km + CC '+money(cc)+'. '+(!any?'Marque se o cliente paga a ida, a volta ou ambas.':under?'Pelo menos um trecho marcado como pago está abaixo do piso estimado.':equal?'Pelo menos um trecho marcado como pago está exatamente no piso mínimo.':'Os trechos marcados como pagos estão acima do piso estimado. Confirme categoria e enquadramento legal antes de contratar.');
 }
 function updateAndSave(){totalFixedCosts();calc();calcAntt();saveSettings();}
 loadSettings();
