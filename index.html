@@ -179,32 +179,51 @@ function calc(){
  else{s.classList.add('good');s.textContent='Atinge a meta de margem informada, com base nos custos preenchidos.'}
 }
 
-// Portaria SUROC nº 22/2026. Eixos publicados nas tabelas: 2, 3, 4, 5, 6, 7 e 9.
-// Coeficientes de carga geral transcritos da Portaria para todas as quatro tabelas.
-const anttGeneralCargo = {
- complete: {
-  standard:{table:'A', values:{2:[4.0738,451.84],3:[5.2177,541.86],4:[5.9180,588.86],5:[6.8284,657.56],6:[7.5347,671.93],7:[8.2727,831.66],9:[9.4114,903.32]}},
-  high:{table:'C', values:{2:[3.4762,172.50],3:[4.4341,195.81],4:[5.0693,213.27],5:[5.8195,228.08],6:[6.4924,231.17],7:[6.9018,272.80],9:[7.8926,291.39]}}
+// Coeficientes da Portaria SUROC nº 22/2026 (ANEXO).
+// Eixos na ordem: 2, 3, 4, 5, 6, 7 e 9. null representa célula sem coeficiente oficial.
+const anttCargoTables = {
+ 'Carga Geral': {
+  complete:{
+   standard:{table:'A',values:{2:[4.0738,451.84],3:[5.2177,541.86],4:[5.9180,588.86],5:[6.8284,657.56],6:[7.5347,671.93],7:[8.2727,831.66],9:[9.4114,903.32]}},
+   high:{table:'C',values:{2:[3.4762,172.50],3:[4.4341,195.81],4:[5.0693,213.27],5:[5.8195,228.08],6:[6.4924,231.17],7:[6.9018,272.80],9:[7.8926,291.39]}}
+  },
+  traction:{
+   standard:{table:'B',values:{4:[5.3538,533.40],5:[6.0900,594.62],6:[6.7863,608.99],7:[7.2181,720.31],9:[8.0379,773.22]}},
+   high:{table:'D',values:{4:[4.6343,201.32],5:[5.2278,214.52],6:[5.8907,217.61],7:[6.1067,248.80],9:[6.8223,263.35]}}
+  }
  },
- traction: {
-  standard:{table:'B', values:{4:[5.3538,533.40],5:[6.0900,594.62],6:[6.7863,608.99],7:[7.2181,720.31],9:[8.0379,773.22]}},
-  high:{table:'D', values:{4:[4.6343,201.32],5:[5.2278,214.52],6:[5.8907,217.61],7:[6.1067,248.80],9:[6.8223,263.35]}}
+ 'Granel sólido': {
+  complete:{
+   standard:{table:'A',values:{2:[4.1056,460.59],3:[5.2555,552.24],4:[5.9476,597.00],5:[6.8548,664.83],6:[7.5641,680.01],7:[8.2316,820.34],9:[9.4318,908.91]}},
+   high:{table:'C',values:{2:[3.4876,174.38],3:[4.4476,198.05],4:[5.0799,215.03],5:[5.8290,229.64],6:[6.5029,232.91],7:[6.8871,270.36],9:[7.8999,292.59]}}
+  },
+  traction:{
+   standard:{table:'B',values:{4:[5.3538,533.40],5:[6.0900,594.62],6:[6.7863,608.99],7:[7.2181,720.31],9:[8.0379,773.22]}},
+   high:{table:'D',values:{4:[4.6343,201.32],5:[5.2278,214.52],6:[5.8907,217.61],7:[6.1067,248.80],9:[6.8223,263.35]}}
+  }
  }
 };
 function calcAntt(){
  const vehicle=$('anttVehicleType').value, axle=Number($('anttAxles').value), op=$('operationType').value;
- const outKm=num('outKm'), backKm=num('backKm'), outFreight=num('freight'), backFreight=num('returnFreight'), status=$('anttStatus');
+ const load=$('loadType').value, outKm=num('outKm'), backKm=num('backKm');
+ const outFreight=num('freight'), backFreight=num('returnFreight'), status=$('anttStatus');
  const paidOut=$('paidOutbound').checked, paidBack=$('paidReturn').checked;
  const vehicleLabel=vehicle==='complete'?'conjunto completo':'somente unidade de tração';
+ const loadLabel=load;
  $('anttDistance').textContent=new Intl.NumberFormat('pt-BR').format(outKm)+' km / '+new Intl.NumberFormat('pt-BR').format(backKm)+' km';
  if(op==='unknown'){
   $('anttTable').textContent='Pendente';$('anttFloor').textContent='—';$('anttCompare').textContent='—';$('anttReturnFloor').textContent='—';$('anttReturnCompare').textContent='—';$('anttTotalFloor').textContent='—';
   status.className='status warn';status.textContent='Não calculado: confirme se a operação é convencional ou de alto desempenho.';return;
  }
- const row=anttGeneralCargo[vehicle][op], vals=row.values[axle];
+ const cargo=anttCargoTables[load];
+ if(!cargo){
+  $('anttTable').textContent='Coeficientes não cadastrados';$('anttFloor').textContent='—';$('anttCompare').textContent='—';$('anttReturnFloor').textContent='—';$('anttReturnCompare').textContent='—';$('anttTotalFloor').textContent='—';
+  status.className='status warn';status.textContent='Piso não calculado: os coeficientes oficiais para '+loadLabel+' ainda não foram incluídos nesta versão. Nenhum coeficiente de outra carga será usado como substituto.';return;
+ }
+ const row=cargo[vehicle][op], vals=row.values[axle];
  if(!vals){
   $('anttTable').textContent='Tabela '+row.table;$('anttFloor').textContent='—';$('anttCompare').textContent='—';$('anttReturnFloor').textContent='—';$('anttReturnCompare').textContent='—';$('anttTotalFloor').textContent='—';
-  status.className='status warn';status.textContent='Não há coeficiente cadastrado para '+axle+' eixos nesta combinação. Confira a regra de enquadramento da ANTT.';return;
+  status.className='status warn';status.textContent='Não há coeficiente cadastrado para '+axle+' eixos, na categoria '+loadLabel+', nesta combinação. Confira a regra de enquadramento da ANTT.';return;
  }
  const [ccd,cc]=vals;
  const outFloor=outKm>0?outKm*ccd+cc:0, backFloor=backKm>0?backKm*ccd+cc:0;
@@ -220,7 +239,7 @@ function calcAntt(){
  const under=(paidOut&&outKm>0&&outFreight<outFloor)||(paidBack&&backKm>0&&backFreight<backFloor);
  const any=(paidOut&&outKm>0)||(paidBack&&backKm>0);
  status.className='status '+(!any?'warn':under?'bad':'good');
- status.textContent='Carga geral: CCD '+money(ccd)+'/km + CC '+money(cc)+'. '+(!any?'Marque se o cliente paga a ida, a volta ou ambas.':under?'Pelo menos um trecho marcado como pago está abaixo do piso estimado.':'Os trechos marcados como pagos estão acima do piso estimado. Confirme categoria e enquadramento legal antes de contratar.');
+ status.textContent=loadLabel+': CCD '+money(ccd)+'/km + CC '+money(cc)+'. '+(!any?'Marque se o cliente paga a ida, a volta ou ambas.':under?'Pelo menos um trecho marcado como pago está abaixo do piso estimado.':'Os trechos marcados como pagos estão acima do piso estimado. Confirme categoria e enquadramento legal antes de contratar.');
 }
 function updateAndSave(){totalFixedCosts();calc();calcAntt();saveSettings();}
 loadSettings();
@@ -232,6 +251,7 @@ $('clearSaved').addEventListener('click',()=>{if(confirm('Apagar os dados salvos
 $('share').addEventListener('click',async()=>{const summary=`Calculadora de Frete\nFaturamento bruto total: ${$('revenue').textContent}\nFrete de ida: ${money(num('freight'))}\nFrete de retorno: ${money(num('returnFreight'))}\nDistância total: ${$('totalKm').textContent}\nCustos estimados: ${$('totalCost').textContent}\nResultado estimado: ${$('profit').textContent}\nCusto/km: ${$('cpk').textContent}\nMargem: ${$('actualMargin').textContent}\nPiso ANTT exibido: ${$('anttFloor').textContent}; confirme a classificação.`;try{if(navigator.share)await navigator.share({title:'Resumo do frete',text:summary});else{await navigator.clipboard.writeText(summary);alert('Resumo copiado.')}}catch(e){}});
 calc();
 calcAntt();
+$('loadType').addEventListener('change',()=>{calcAntt();saveSettings();});
 $('operationType').addEventListener('change',()=>{calcAntt();saveSettings();});$('anttVehicleType').addEventListener('change',()=>{calcAntt();saveSettings();});$('anttAxles').addEventListener('change',()=>{calcAntt();saveSettings();});
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
