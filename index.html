@@ -42,20 +42,20 @@
   </nav>
   <section id="dashboardView" class="dashboard-view" aria-labelledby="dashboardTitle">
     <div class="dashboard-heading">
-      <div><span class="eyebrow">PAINEL DE CONTROLE</span><h2 id="dashboardTitle">Visão geral</h2><p>Resumo atualizado com os dados da simulação atual.</p></div>
+      <div><span class="eyebrow">PAINEL DE CONTROLE</span><h2 id="dashboardTitle">Visão geral</h2><p>Indicadores consolidados a partir das viagens registradas neste aparelho.</p></div>
       <span class="live-pill"><span></span> Atualizado automaticamente</span>
     </div>
     <div class="dashboard-grid">
-      <article class="dashboard-card featured"><span>Faturamento bruto estimado</span><strong id="dashRevenue">R$ 0,00</strong><small>Receita informada nesta simulação</small></article>
-      <article class="dashboard-card"><span>Resultado estimado</span><strong id="dashProfit">R$ 0,00</strong><small>Após os custos e tributos informados</small></article>
-      <article class="dashboard-card"><span>Custos estimados</span><strong id="dashCosts">R$ 0,00</strong><small>Custos operacionais e fixos rateados</small></article>
-      <article class="dashboard-card"><span>Margem estimada</span><strong id="dashMargin">0%</strong><small>Resultado sobre o faturamento</small></article>
-      <article class="dashboard-card"><span>Distância total</span><strong id="dashKm">0 km</strong><small>Ida + retorno</small></article>
-      <article class="dashboard-card"><span>Resultado por hora</span><strong id="dashHour">R$ 0,00</strong><small>Considerando o tempo total informado</small></article>
+      <article class="dashboard-card featured"><span>Faturamento registrado</span><strong id="dashRevenue">R$ 0,00</strong><small>Soma dos fretes registrados no histórico</small></article>
+      <article class="dashboard-card"><span>Resultado acumulado</span><strong id="dashProfit">R$ 0,00</strong><small>Soma dos resultados das viagens registradas</small></article>
+      <article class="dashboard-card"><span>Custos registrados</span><strong id="dashCosts">R$ 0,00</strong><small>Soma dos custos das viagens registradas</small></article>
+      <article class="dashboard-card"><span>Viagens registradas</span><strong id="dashMargin">0</strong><small>Total de registros no histórico</small></article>
+      <article class="dashboard-card"><span>Quilometragem registrada</span><strong id="dashKm">0 km</strong><small>Soma das distâncias das viagens</small></article>
+      <article class="dashboard-card"><span>Aguardando recebimento</span><strong id="dashHour">R$ 0,00</strong><small>Valor das viagens marcadas como pendentes</small></article>
     </div>
     <div class="dashboard-lower">
       <article class="dashboard-panel">
-        <h3>Composição da operação</h3>
+        <h3>Simulação atual</h3>
         <div class="dashboard-line"><span>Diesel estimado</span><strong id="dashFuel">R$ 0,00</strong></div>
         <div class="dashboard-line"><span>Custo por quilômetro</span><strong id="dashCpk">R$ 0,00</strong></div>
         <div class="dashboard-line"><span>Frete mínimo para a meta</span><strong id="dashTarget">R$ 0,00</strong></div>
@@ -68,7 +68,7 @@
         <button class="btn" type="button" data-view="calculator">Abrir calculadora</button><button class="btn secondary" type="button" data-view="history">Salvar esta viagem no histórico</button>
       </article>
     </div>
-    <p class="dashboard-disclaimer">Importante: nesta etapa, os indicadores representam a simulação atual. Eles ainda não são um histórico de viagens realizadas nem um fechamento financeiro mensal. O histórico será incorporado em uma próxima etapa.</p>
+    <p class="dashboard-disclaimer">Os indicadores principais somam os registros do histórico local. Faturamento e resultado são os valores calculados e salvos em cada viagem; não representam necessariamente valores já recebidos. Viagens planejadas e em andamento também entram nos totais. O painel “Simulação atual” mostra separadamente o cálculo aberto na calculadora.</p>
   </section>
   <section id="historyView" class="history-view" hidden>
     <div class="dashboard-heading"><div><span class="eyebrow">GESTÃO DE FRETES</span><h2>Histórico de viagens</h2><p>Registre os fretes calculados e acompanhe os resultados.</p></div></div>
@@ -236,8 +236,28 @@ function currentTripSnapshot(){
  return {inputs,revenue:$('revenue').textContent,profit:$('profit').textContent,cost:$('totalCost').textContent,margin:$('actualMargin').textContent,km:$('totalKm').textContent,perHour:$('perHour').textContent,cpk:$('cpk').textContent,fuel:$('fuelCost').textContent,anttTable:$('anttTable').textContent,anttFloor:$('anttFloor').textContent,anttCompare:$('anttCompare').textContent};
 }
 function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function parseMoneyText(value){return Number(String(value||'').replace(/[^0-9,.-]/g,'').replace(/\.(?=.*\.)/g,'').replace(',','.'))||0;}
+function tripKmValue(trip){const snapshot=trip.snapshot&&trip.snapshot.inputs?trip.snapshot.inputs:{};const km=Number(snapshot.outKm||0)+Number(snapshot.backKm||0);return km||parseMoneyText(trip.km);}
+function updateDashboard(){
+ const totalRevenue=savedTrips.reduce((sum,t)=>sum+(Number(t.revenueValue)||0),0);
+ const totalProfit=savedTrips.reduce((sum,t)=>sum+(Number(t.profitValue)||0),0);
+ const totalCosts=savedTrips.reduce((sum,t)=>sum+(Number(t.costValue)||0),0);
+ const totalKm=savedTrips.reduce((sum,t)=>sum+tripKmValue(t),0);
+ const pending=savedTrips.filter(t=>t.status==='pendente').reduce((sum,t)=>sum+(Number(t.revenueValue)||0),0);
+ $('dashRevenue').textContent=money(totalRevenue);
+ $('dashProfit').textContent=money(totalProfit);
+ $('dashCosts').textContent=money(totalCosts);
+ $('dashMargin').textContent=String(savedTrips.length);
+ $('dashKm').textContent=new Intl.NumberFormat('pt-BR').format(totalKm)+' km';
+ $('dashHour').textContent=money(pending);
+ $('dashFuel').textContent=$('fuelCost').textContent;
+ $('dashCpk').textContent=$('cpk').textContent;
+ $('dashTarget').textContent=$('targetFreight').textContent;
+ $('dashProfile').textContent=$('operationProfile').value==='owner'?'Autônomo — proprietário':'Empresa — motorista contratado';
+}
 function renderTrips(){
  const list=$('tripList');if(!list)return;
+ updateDashboard();
  const totalRevenue=savedTrips.reduce((sum,t)=>sum+(Number(t.revenueValue)||0),0);
  const totalProfit=savedTrips.reduce((sum,t)=>sum+(Number(t.profitValue)||0),0);
  $('historyCount').textContent=String(savedTrips.length);$('historyRevenue').textContent=money(totalRevenue);$('historyProfit').textContent=money(totalProfit);
@@ -249,7 +269,7 @@ function renderTrips(){
 function resetTripForm(){editingTripId=null;$('tripDate').value=new Date().toISOString().slice(0,10);['tripClient','tripOrigin','tripDestination','tripNotes'].forEach(id=>$(id).value='');$('tripStatus').value='planejada';$('saveTrip').textContent='Salvar viagem calculada';$('cancelEditTrip').hidden=true;}
 function saveCurrentTrip(){
  const date=$('tripDate').value;if(!date){$('historyFeedback').textContent='Informe a data da viagem.';return;}
- const snapshot=currentTripSnapshot(),entry={id:editingTripId||('trip-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)),date,client:$('tripClient').value.trim(),origin:$('tripOrigin').value.trim(),destination:$('tripDestination').value.trim(),status:$('tripStatus').value,notes:$('tripNotes').value.trim(),vehicle:$('vehicle').value,loadType:$('loadType').value,km:$('totalKm').textContent,revenueValue:num('freight')+num('returnFreight'),profitValue:Number($('profit').textContent.replace(/[^0-9,.-]/g,'').replace('.','').replace(',','.'))||0,costValue:Number($('totalCost').textContent.replace(/[^0-9,.-]/g,'').replace('.','').replace(',','.'))||0,snapshot,updatedAt:new Date().toISOString()};
+ const snapshot=currentTripSnapshot(),entry={id:editingTripId||('trip-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)),date,client:$('tripClient').value.trim(),origin:$('tripOrigin').value.trim(),destination:$('tripDestination').value.trim(),status:$('tripStatus').value,notes:$('tripNotes').value.trim(),vehicle:$('vehicle').value,loadType:$('loadType').value,km:$('totalKm').textContent,revenueValue:parseMoneyText($('revenue').textContent),profitValue:parseMoneyText($('profit').textContent),costValue:parseMoneyText($('totalCost').textContent),snapshot,updatedAt:new Date().toISOString()};
  if(editingTripId){savedTrips=savedTrips.map(t=>t.id===editingTripId?entry:t);}else{savedTrips.push(entry);}
  if(persistTrips()){resetTripForm();}
 }
@@ -260,18 +280,6 @@ function editTrip(id){
  $('saveTrip').textContent='Atualizar viagem';$('cancelEditTrip').hidden=false;$('historyFeedback').textContent='Edite os dados da viagem e salve a atualização.';window.scrollTo({top:0,behavior:'smooth'});
 }
 function openHistory(){ $('dashboardView').hidden=true;$('calculatorView').hidden=true;$('historyView').hidden=false;document.querySelectorAll('.nav-btn').forEach(item=>item.classList.toggle('active',item.dataset.view==='history'));renderTrips();window.scrollTo({top:0,behavior:'smooth'});}
-function updateDashboard(){
- $('dashRevenue').textContent=$('revenue').textContent;
- $('dashProfit').textContent=$('profit').textContent;
- $('dashCosts').textContent=$('totalCost').textContent;
- $('dashMargin').textContent=$('actualMargin').textContent;
- $('dashKm').textContent=$('totalKm').textContent;
- $('dashHour').textContent=$('perHour').textContent;
- $('dashFuel').textContent=$('fuelCost').textContent;
- $('dashCpk').textContent=$('cpk').textContent;
- $('dashTarget').textContent=$('targetFreight').textContent;
- $('dashProfile').textContent=$('operationProfile').value==='owner'?'Autônomo — proprietário':'Empresa — motorista contratado';
-}
 function calc(){
  const km=num('outKm')+num('backKm'), freight=num('freight')+num('returnFreight');
  const litres=num('consumption')>0?km/num('consumption'):0;
