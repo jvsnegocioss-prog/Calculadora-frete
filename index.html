@@ -28,7 +28,7 @@
     .vehicle-view{padding:18px 0 28px}.vehicle-form{margin-bottom:12px}.vehicle-item{border-top:1px solid var(--line);padding:13px 0;display:grid;gap:8px}.vehicle-item:first-child{border-top:0}.vehicle-meta{font-size:12px;color:var(--muted)}.vehicle-actions{display:flex;gap:7px;flex-wrap:wrap}.vehicle-actions button{font-size:11px;padding:7px 10px}.vehicle-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.vehicle-stats div{background:#f5f8fa;border-radius:9px;padding:9px}.vehicle-stats span{display:block;font-size:10px;color:var(--muted)}.vehicle-stats strong{display:block;font-size:14px;margin-top:3px}@media(max-width:420px){.vehicle-stats{grid-template-columns:1fr 1fr}}
     .main-nav{display:flex;gap:8px;padding:16px 0 4px;overflow-x:auto}.nav-btn{background:transparent;color:var(--muted);border:1px solid transparent;padding:10px 14px;white-space:nowrap}.nav-btn.active{background:#fff;color:var(--navy);border-color:var(--line);box-shadow:0 2px 8px #102a430d}.dashboard-view{padding:18px 0 24px}.dashboard-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:16px}.dashboard-heading h2{font-size:25px;letter-spacing:-.5px;margin:3px 0}.dashboard-heading p{margin:0;color:var(--muted);font-size:13px}.eyebrow{font-size:10px;letter-spacing:1.2px;font-weight:800;color:var(--blue)}.live-pill{font-size:11px;color:var(--green);background:#e8f5ed;border-radius:30px;padding:7px 10px;white-space:nowrap}.live-pill span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#219653;margin-right:5px}.dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.dashboard-card,.dashboard-panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0;box-shadow:0 3px 12px #102a4308}.dashboard-card>span{display:block;font-size:11px;font-weight:700;color:var(--muted)}.dashboard-card strong{display:block;font-size:clamp(18px,4vw,25px);letter-spacing:-.6px;margin:8px 0 4px;overflow-wrap:anywhere}.dashboard-card small{display:block;font-size:10px;color:var(--muted);line-height:1.35}.dashboard-card.featured{background:var(--navy);color:#fff;border-color:var(--navy)}.dashboard-card.featured>span,.dashboard-card.featured small{color:#d5e4ed}.dashboard-card.featured strong{font-size:clamp(22px,5vw,30px)}.dashboard-lower{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}.dashboard-panel h3{font-size:15px;margin:0 0 12px}.dashboard-line{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:12px}.dashboard-line span{color:var(--muted)}.dashboard-line strong{text-align:right}.dashboard-action{background:#f8fbfc}.dashboard-action p{font-size:12px;color:var(--muted);margin:7px 0 14px}.dashboard-disclaimer{font-size:11px;color:var(--muted);line-height:1.5;margin:12px 2px 0}[hidden]{display:none!important}
     @media(min-width:760px){.dashboard-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.dashboard-lower{grid-template-columns:1.2fr 1fr}.dashboard-view{padding-top:22px}.dashboard-heading h2{font-size:29px}}
-    @media(min-width:760px){header{padding:30px 24px 34px}h1{font-size:30px}main{padding:24px}.grid{grid-template-columns:1fr 1fr}.results{grid-template-columns:1fr 1fr}.card.results-card{grid-column:1/-1}.card.results-card .results{grid-template-columns:repeat(4,1fr)}}
+    #fleetVehicleReport table,#fleetCategoryReport table{width:100%;border-collapse:collapse;min-width:760px;font-size:12px}#fleetVehicleReport th,#fleetVehicleReport td,#fleetCategoryReport th,#fleetCategoryReport td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}#fleetVehicleReport th:first-child,#fleetVehicleReport td:first-child,#fleetCategoryReport th:first-child,#fleetCategoryReport td:first-child{text-align:left}#fleetVehicleReport th,#fleetCategoryReport th{color:var(--muted);font-size:10px;background:#f5f8fa}#fleetVehicleReport tr.total-row{font-weight:800;background:#f5f8fa}\n    @media(min-width:760px){header{padding:30px 24px 34px}h1{font-size:30px}main{padding:24px}.grid{grid-template-columns:1fr 1fr}.results{grid-template-columns:1fr 1fr}.card.results-card{grid-column:1/-1}.card.results-card .results{grid-template-columns:repeat(4,1fr)}}
   </style>
 </head>
 <body>
@@ -72,6 +72,24 @@
       <h3 style="margin:22px 0 10px">Evolução dos últimos 6 meses</h3>
       <div id="monthlyTrend" style="overflow-x:auto"><p class="small-help">Nenhuma viagem registrada no período.</p></div>
       <p class="small-help">O relatório considera a data informada em cada viagem. “Recebido” e “A receber” dependem da atualização manual do status no histórico. Registros planejados e em andamento entram no faturamento e no resultado estimado, mas não são contabilizados como recebidos.</p>
+    </section>
+    <section class="dashboard-panel" style="margin:18px 0;padding:20px">
+      <div class="dashboard-heading" style="margin-bottom:14px">
+        <div><span class="eyebrow">GESTÃO DA TRANSPORTADORA</span><h3 style="margin:4px 0">Relatório financeiro da frota</h3><p>Comparativo dos caminhões e despesas avulsas no mês selecionado acima.</p></div>
+      </div>
+      <div class="dashboard-grid">
+        <article class="dashboard-card featured"><span>Resultado das viagens</span><strong id="fleetReportProfit">R$ 0,00</strong><small>Faturamento menos custos já calculados nas viagens</small></article>
+        <article class="dashboard-card"><span>Despesas avulsas</span><strong id="fleetReportExpenses">R$ 0,00</strong><small>Lançamentos separados no controle de despesas</small></article>
+        <article class="dashboard-card"><span>Resultado após despesas avulsas</span><strong id="fleetReportAdjusted">R$ 0,00</strong><small>Visão ajustada; pode haver sobreposição de custos</small></article>
+        <article class="dashboard-card"><span>Quilometragem da frota</span><strong id="fleetReportKm">0 km</strong><small>Distância somada das viagens registradas</small></article>
+        <article class="dashboard-card"><span>Viagens no período</span><strong id="fleetReportTrips">0</strong><small>Quantidade de registros no mês</small></article>
+        <article class="dashboard-card"><span>Faturamento da frota</span><strong id="fleetReportRevenue">R$ 0,00</strong><small>Fretes registrados no mês</small></article>
+      </div>
+      <h3 style="margin:22px 0 10px">Comparativo por veículo</h3>
+      <div id="fleetVehicleReport" style="overflow-x:auto"><p class="small-help">Nenhum dado disponível para o período.</p></div>
+      <h3 style="margin:22px 0 10px">Despesas por categoria</h3>
+      <div id="fleetCategoryReport"><p class="small-help">Nenhuma despesa avulsa registrada no período.</p></div>
+      <p class="small-help">Importante: o resultado das viagens já desconta os custos registrados em cada simulação. As despesas avulsas são exibidas separadamente. O “resultado após despesas avulsas” é apenas uma visão gerencial e pode duplicar combustível, pedágio, manutenção ou outros itens já considerados nas viagens. Não representa lucro contábil definitivo. Viagens e despesas sem veículo identificado aparecem em linhas próprias.</p>
     </section>
     <div class="dashboard-lower">
       <article class="dashboard-panel">
@@ -346,8 +364,43 @@ function updateMonthlyReport(){
  const keys=Array.from({length:6},(_,i)=>{const d=new Date(year,month-1-(5-i),1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');});
  $('monthlyTrend').innerHTML='<table style="width:100%;border-collapse:collapse;min-width:540px"><thead><tr><th style="text-align:left;padding:9px;border-bottom:1px solid var(--line)">Mês</th><th style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">Faturamento</th><th style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">Custos</th><th style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">Resultado</th><th style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">Viagens</th></tr></thead><tbody>'+keys.map(k=>{const v=monthlyTotals(k);return '<tr><td style="padding:9px;border-bottom:1px solid var(--line)">'+escapeHtml(monthTitle(k))+'</td><td style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">'+money(v.revenue)+'</td><td style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">'+money(v.costs)+'</td><td style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">'+money(v.profit)+'</td><td style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">'+v.trips.length+'</td></tr>';}).join('')+'</tbody></table>';
 }
+function updateFleetFinancialReport(){
+ const month=$('reportMonth')&&$('reportMonth').value?$('reportMonth').value:currentMonthKey();
+ const trips=savedTrips.filter(t=>localMonthKey(t.date)===month);
+ const expenses=fleetExpenses.filter(e=>localMonthKey(e.date)===month);
+ const revenue=trips.reduce((n,t)=>n+(Number(t.revenueValue)||0),0);
+ const costs=trips.reduce((n,t)=>n+(Number(t.costValue)||0),0);
+ const profit=trips.reduce((n,t)=>n+(Number(t.profitValue)||0),0);
+ const km=trips.reduce((n,t)=>n+tripKmValue(t),0);
+ const expenseTotal=expenses.reduce((n,e)=>n+(Number(e.amount)||0),0);
+ $('fleetReportProfit').textContent=money(profit);
+ $('fleetReportExpenses').textContent=money(expenseTotal);
+ $('fleetReportAdjusted').textContent=money(profit-expenseTotal);
+ $('fleetReportKm').textContent=new Intl.NumberFormat('pt-BR').format(km)+' km';
+ $('fleetReportTrips').textContent=String(trips.length);
+ $('fleetReportRevenue').textContent=money(revenue);
+ const rows=fleetVehicles.map(v=>{
+  const vt=trips.filter(t=>t.vehicleId===v.id),ve=expenses.filter(e=>e.vehicleId===v.id);
+  const vr=vt.reduce((n,t)=>n+(Number(t.revenueValue)||0),0),vc=vt.reduce((n,t)=>n+(Number(t.costValue)||0),0),vp=vt.reduce((n,t)=>n+(Number(t.profitValue)||0),0),vk=vt.reduce((n,t)=>n+tripKmValue(t),0),vx=ve.reduce((n,e)=>n+(Number(e.amount)||0),0);
+  return {name:v.name+(v.plate?' • '+v.plate:''),trips:vt.length,revenue:vr,costs:vc,profit:vp,km:vk,cpk:vk>0?vc/vk:0,expenses:vx};
+ }).filter(v=>v.trips||v.expenses).sort((a,b)=>b.profit-a.profit);
+ const noVehicleTrips=trips.filter(t=>!t.vehicleId||!fleetVehicles.some(v=>v.id===t.vehicleId));
+ if(noVehicleTrips.length){const nr=noVehicleTrips.reduce((n,t)=>n+(Number(t.revenueValue)||0),0),nc=noVehicleTrips.reduce((n,t)=>n+(Number(t.costValue)||0),0),np=noVehicleTrips.reduce((n,t)=>n+(Number(t.profitValue)||0),0),nk=noVehicleTrips.reduce((n,t)=>n+tripKmValue(t),0);rows.push({name:'Sem veículo identificado',trips:noVehicleTrips.length,revenue:nr,costs:nc,profit:np,km:nk,cpk:nk>0?nc/nk:0,expenses:0});}
+ const noVehicleExpenses=expenses.filter(e=>!e.vehicleId||!fleetVehicles.some(v=>v.id===e.vehicleId)).reduce((n,e)=>n+(Number(e.amount)||0),0);
+ if(noVehicleExpenses){rows.push({name:'Despesas sem veículo identificado',trips:0,revenue:0,costs:0,profit:0,km:0,cpk:0,expenses:noVehicleExpenses});}
+ const vehicleReport=$('fleetVehicleReport');
+ if(!rows.length){vehicleReport.innerHTML='<p class="small-help">Nenhuma viagem ou despesa registrada para este mês.</p>';}
+ else{
+  const body=rows.map(v=>'<tr><td>'+escapeHtml(v.name)+'</td><td>'+v.trips+'</td><td>'+money(v.revenue)+'</td><td>'+money(v.costs)+'</td><td>'+money(v.profit)+'</td><td>'+new Intl.NumberFormat('pt-BR').format(v.km)+' km</td><td>'+money(v.cpk)+'</td><td>'+money(v.expenses)+'</td></tr>').join('');
+  vehicleReport.innerHTML='<table><thead><tr><th>Veículo</th><th>Viagens</th><th>Faturamento</th><th>Custos das viagens</th><th>Resultado</th><th>Km</th><th>Custo/km</th><th>Despesas avulsas</th></tr></thead><tbody>'+body+'<tr class="total-row"><td>Total da frota</td><td>'+trips.length+'</td><td>'+money(revenue)+'</td><td>'+money(costs)+'</td><td>'+money(profit)+'</td><td>'+new Intl.NumberFormat('pt-BR').format(km)+' km</td><td>'+money(km>0?costs/km:0)+'</td><td>'+money(expenseTotal)+'</td></tr></tbody></table>';
+ }
+ const categories={};expenses.forEach(e=>{const category=e.category||'Outros';categories[category]=(categories[category]||0)+(Number(e.amount)||0);});
+ const categoryRows=Object.entries(categories).sort((a,b)=>b[1]-a[1]);
+ $('fleetCategoryReport').innerHTML=categoryRows.length?'<table><thead><tr><th>Categoria</th><th>Valor</th><th>Participação</th></tr></thead><tbody>'+categoryRows.map(([name,value])=>'<tr><td>'+escapeHtml(name)+'</td><td>'+money(value)+'</td><td>'+pct(expenseTotal>0?value/expenseTotal*100:0)+'</td></tr>').join('')+'<tr class="total-row"><td>Total</td><td>'+money(expenseTotal)+'</td><td>100%</td></tr></tbody></table>':'<p class="small-help">Nenhuma despesa avulsa registrada neste mês.</p>';
+}
 function updateDashboard(){
  updateMonthlyReport();
+ updateFleetFinancialReport();
  const totalRevenue=savedTrips.reduce((sum,t)=>sum+(Number(t.revenueValue)||0),0);
  const totalProfit=savedTrips.reduce((sum,t)=>sum+(Number(t.profitValue)||0),0);
  const totalCosts=savedTrips.reduce((sum,t)=>sum+(Number(t.costValue)||0),0);
@@ -491,7 +544,7 @@ $('reset').addEventListener('click',()=>{Object.entries(defaults).forEach(([id,v
 $('clearSaved').addEventListener('click',()=>{if(confirm('Apagar os dados salvos neste aparelho e restaurar os valores de exemplo?')){try{localStorage.removeItem(storageKey);}catch(e){}Object.entries(defaults).forEach(([id,value])=>$(id).value=value);updateDriverProfile();$('operationType').value='unknown';$('anttVehicleType').value='complete';$('anttAxles').value='5';$('paidOutbound').checked=true;$('paidReturn').checked=false;totalFixedCosts();calc();calcAntt();saveSettings();$('saveStatus').textContent='Dados anteriores apagados; valores de exemplo salvos novamente.';}});
 $('share').addEventListener('click',async()=>{const summary=`Calculadora de Frete\nPerfil da operação: ${$('operationProfile').value==='owner'?'Motorista autônomo':'Empresa com motorista contratado'}\nRemuneração percentual do motorista: ${$('detailDriverPercent').textContent}\nFaturamento bruto total: ${$('revenue').textContent}\nFrete de ida: ${money(num('freight'))}\nFrete de retorno: ${money(num('returnFreight'))}\nDistância total: ${$('totalKm').textContent}\nCustos estimados: ${$('totalCost').textContent}\nResultado estimado: ${$('profit').textContent}\nCusto/km: ${$('cpk').textContent}\nMargem: ${$('actualMargin').textContent}\nPiso ANTT exibido: ${$('anttFloor').textContent}; confirme a classificação.`;try{if(navigator.share)await navigator.share({title:'Resumo do frete',text:summary});else{await navigator.clipboard.writeText(summary);alert('Resumo copiado.')}}catch(e){}});
 $('reportMonth').value=currentMonthKey();
-$('reportMonth').addEventListener('change',updateMonthlyReport);
+$('reportMonth').addEventListener('change',()=>{updateMonthlyReport();updateFleetFinancialReport();});
 readTrips();
  readVehicles();
  readExpenses();
