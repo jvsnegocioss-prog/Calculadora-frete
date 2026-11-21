@@ -23,6 +23,8 @@
     .results{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:#f5f8fa;border:1px solid var(--line);padding:13px;border-radius:13px;min-width:0}.metric .label{font-size:12px;color:var(--muted);font-weight:650}.metric strong{display:block;font-size:21px;letter-spacing:-.5px;margin-top:5px;overflow-wrap:anywhere}.metric.primary{background:var(--navy);color:white;border-color:var(--navy)}.metric.primary .label{color:#d5e4ed}.metric.primary strong{font-size:25px}.status{padding:12px 13px;border-radius:12px;font-size:13px;font-weight:700;margin-top:12px;background:#edf2f5;color:#445967}.status.good{background:#e5f5eb;color:var(--green)}.status.warn{background:#fff2df;color:var(--amber)}.status.bad{background:#fde9e7;color:var(--red)}
     .note{font-size:12px;color:var(--muted);margin:12px 0 0}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button{border:0;border-radius:11px;padding:12px 15px;font:inherit;font-size:14px;font-weight:750;cursor:pointer}.btn{background:var(--blue);color:white}.btn2{background:#e8eef2;color:var(--navy)}footer{font-size:12px;color:var(--muted);padding:0 14px 28px;text-align:center}
     .section-intro{font-size:13px;color:var(--muted);margin:-7px 0 14px}.wide-result{margin-top:14px}.antt{border:1px dashed #a7bac6;background:#f7fafb;border-radius:13px;padding:13px;margin-top:12px}.antt strong{font-size:13px}.antt p{font-size:12px;color:var(--muted);margin:5px 0 0}.breakdown{margin-top:14px;border:1px solid var(--line);border-radius:13px;overflow:hidden}.breakdown h3{font-size:14px;margin:0;padding:12px;background:#f5f8fa}.cost-row{display:flex;justify-content:space-between;gap:12px;padding:9px 12px;border-top:1px solid var(--line);font-size:13px}.cost-row span:first-child{color:var(--muted)}.cost-row strong{text-align:right;white-space:nowrap}.cost-row.total{background:#eef4f7;font-weight:800}.cost-row.total span:first-child{color:var(--ink)}.small-help{font-size:12px;color:var(--muted);margin:8px 0 0}
+    .main-nav{display:flex;gap:8px;padding:16px 0 4px;overflow-x:auto}.nav-btn{background:transparent;color:var(--muted);border:1px solid transparent;padding:10px 14px;white-space:nowrap}.nav-btn.active{background:#fff;color:var(--navy);border-color:var(--line);box-shadow:0 2px 8px #102a430d}.dashboard-view{padding:18px 0 24px}.dashboard-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:16px}.dashboard-heading h2{font-size:25px;letter-spacing:-.5px;margin:3px 0}.dashboard-heading p{margin:0;color:var(--muted);font-size:13px}.eyebrow{font-size:10px;letter-spacing:1.2px;font-weight:800;color:var(--blue)}.live-pill{font-size:11px;color:var(--green);background:#e8f5ed;border-radius:30px;padding:7px 10px;white-space:nowrap}.live-pill span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#219653;margin-right:5px}.dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.dashboard-card,.dashboard-panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0;box-shadow:0 3px 12px #102a4308}.dashboard-card>span{display:block;font-size:11px;font-weight:700;color:var(--muted)}.dashboard-card strong{display:block;font-size:clamp(18px,4vw,25px);letter-spacing:-.6px;margin:8px 0 4px;overflow-wrap:anywhere}.dashboard-card small{display:block;font-size:10px;color:var(--muted);line-height:1.35}.dashboard-card.featured{background:var(--navy);color:#fff;border-color:var(--navy)}.dashboard-card.featured>span,.dashboard-card.featured small{color:#d5e4ed}.dashboard-card.featured strong{font-size:clamp(22px,5vw,30px)}.dashboard-lower{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}.dashboard-panel h3{font-size:15px;margin:0 0 12px}.dashboard-line{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:12px}.dashboard-line span{color:var(--muted)}.dashboard-line strong{text-align:right}.dashboard-action{background:#f8fbfc}.dashboard-action p{font-size:12px;color:var(--muted);margin:7px 0 14px}.dashboard-disclaimer{font-size:11px;color:var(--muted);line-height:1.5;margin:12px 2px 0}[hidden]{display:none!important}
+    @media(min-width:760px){.dashboard-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.dashboard-lower{grid-template-columns:1.2fr 1fr}.dashboard-view{padding-top:22px}.dashboard-heading h2{font-size:29px}}
     @media(min-width:760px){header{padding:30px 24px 34px}h1{font-size:30px}main{padding:24px}.grid{grid-template-columns:1fr 1fr}.results{grid-template-columns:1fr 1fr}.card.results-card{grid-column:1/-1}.card.results-card .results{grid-template-columns:repeat(4,1fr)}}
   </style>
 </head>
@@ -32,7 +34,41 @@
   <p>Descubra quanto a viagem custa, quanto pode sobrar e qual é o custo por quilômetro. Esta primeira versão funciona com valores preenchidos manualmente.</p>
 </div></header>
 <main class="wrap">
-  <div class="grid">
+  <nav class="main-nav" aria-label="Navegação principal">
+    <button class="nav-btn active" type="button" data-view="dashboard">Dashboard</button>
+    <button class="nav-btn" type="button" data-view="calculator">Calculadora de Frete</button>
+  </nav>
+  <section id="dashboardView" class="dashboard-view" aria-labelledby="dashboardTitle">
+    <div class="dashboard-heading">
+      <div><span class="eyebrow">PAINEL DE CONTROLE</span><h2 id="dashboardTitle">Visão geral</h2><p>Resumo atualizado com os dados da simulação atual.</p></div>
+      <span class="live-pill"><span></span> Atualizado automaticamente</span>
+    </div>
+    <div class="dashboard-grid">
+      <article class="dashboard-card featured"><span>Faturamento bruto estimado</span><strong id="dashRevenue">R$ 0,00</strong><small>Receita informada nesta simulação</small></article>
+      <article class="dashboard-card"><span>Resultado estimado</span><strong id="dashProfit">R$ 0,00</strong><small>Após os custos e tributos informados</small></article>
+      <article class="dashboard-card"><span>Custos estimados</span><strong id="dashCosts">R$ 0,00</strong><small>Custos operacionais e fixos rateados</small></article>
+      <article class="dashboard-card"><span>Margem estimada</span><strong id="dashMargin">0%</strong><small>Resultado sobre o faturamento</small></article>
+      <article class="dashboard-card"><span>Distância total</span><strong id="dashKm">0 km</strong><small>Ida + retorno</small></article>
+      <article class="dashboard-card"><span>Resultado por hora</span><strong id="dashHour">R$ 0,00</strong><small>Considerando o tempo total informado</small></article>
+    </div>
+    <div class="dashboard-lower">
+      <article class="dashboard-panel">
+        <h3>Composição da operação</h3>
+        <div class="dashboard-line"><span>Diesel estimado</span><strong id="dashFuel">R$ 0,00</strong></div>
+        <div class="dashboard-line"><span>Custo por quilômetro</span><strong id="dashCpk">R$ 0,00</strong></div>
+        <div class="dashboard-line"><span>Frete mínimo para a meta</span><strong id="dashTarget">R$ 0,00</strong></div>
+        <div class="dashboard-line"><span>Perfil de remuneração</span><strong id="dashProfile">Empresa</strong></div>
+      </article>
+      <article class="dashboard-panel dashboard-action">
+        <span class="eyebrow">PRÓXIMO PASSO</span>
+        <h3>Calcule e confira um frete</h3>
+        <p>Abra a calculadora para editar distâncias, custos, remuneração e conferir o piso mínimo da ANTT.</p>
+        <button class="btn" type="button" data-view="calculator">Abrir calculadora</button>
+      </article>
+    </div>
+    <p class="dashboard-disclaimer">Importante: nesta etapa, os indicadores representam a simulação atual. Eles ainda não são um histórico de viagens realizadas nem um fechamento financeiro mensal. O histórico será incorporado em uma próxima etapa.</p>
+  </section>
+  <div id="calculatorView" class="grid" hidden>
     <section class="card">
       <h2><span class="num">1</span> Dados do frete</h2>
       <div class="fields">
@@ -163,6 +199,18 @@ function updateDriverProfile(){const owner=$('operationProfile').value==='owner'
 function totalFixedCosts(){const ids=['monthlyFinancing','monthlyInsurance','monthlyTracking','monthlyAnnualFees','monthlyOtherFixed'];if($('operationProfile').value!=='owner')ids.push('monthlyDriver');const total=ids.reduce((sum,id)=>sum+num(id),0);$('fixedMonthly').value=total.toFixed(2);return total;}
 function saveSettings(){try{const data={};ids.forEach(id=>{data[id]=$(id).value});data.operationType=$('operationType').value;data.anttVehicleType=$('anttVehicleType').value;data.anttAxles=$('anttAxles').value;data.paidOutbound=$('paidOutbound').checked;data.paidReturn=$('paidReturn').checked;localStorage.setItem(storageKey,JSON.stringify(data));$('saveStatus').textContent='✓ Dados salvos neste aparelho. Você pode editá-los quando precisar.';}catch(e){$('saveStatus').textContent='Não foi possível salvar neste navegador. Verifique as configurações de privacidade.';}}
 function loadSettings(){try{const saved=JSON.parse(localStorage.getItem(storageKey)||'null');const values={...defaults,...(saved&&typeof saved==='object'?saved:{})};Object.entries(values).forEach(([id,value])=>{if($(id))$(id).value=value;});$('operationType').value=(saved&&saved.operationType)||'unknown';$('anttVehicleType').value=(saved&&saved.anttVehicleType)||'complete';$('anttAxles').value=(saved&&saved.anttAxles)||'5';$('paidOutbound').checked=saved&&saved.paidOutbound!==undefined?saved.paidOutbound:true;$('paidReturn').checked=saved&&saved.paidReturn!==undefined?saved.paidReturn:false;}catch(e){Object.entries(defaults).forEach(([id,value])=>{if($(id))$(id).value=value;});}updateDriverProfile();totalFixedCosts();}
+function updateDashboard(){
+ $('dashRevenue').textContent=$('revenue').textContent;
+ $('dashProfit').textContent=$('profit').textContent;
+ $('dashCosts').textContent=$('totalCost').textContent;
+ $('dashMargin').textContent=$('actualMargin').textContent;
+ $('dashKm').textContent=$('totalKm').textContent;
+ $('dashHour').textContent=$('perHour').textContent;
+ $('dashFuel').textContent=$('fuelCost').textContent;
+ $('dashCpk').textContent=$('cpk').textContent;
+ $('dashTarget').textContent=$('targetFreight').textContent;
+ $('dashProfile').textContent=$('operationProfile').value==='owner'?'Autônomo — proprietário':'Empresa — motorista contratado';
+}
 function calc(){
  const km=num('outKm')+num('backKm'), freight=num('freight')+num('returnFreight');
  const litres=num('consumption')>0?km/num('consumption'):0;
@@ -188,6 +236,7 @@ function calc(){
  else if(profit<0){s.classList.add('bad');s.textContent='Prejuízo estimado: o frete não cobre os custos informados.'}
  else if(margin<num('margin')){s.classList.add('warn');s.textContent='Há sobra estimada, mas a margem está abaixo da meta definida.'}
  else{s.classList.add('good');s.textContent='Atinge a meta de margem informada, com base nos custos preenchidos.'}
+ updateDashboard();
 }
 
 // Coeficientes da Portaria SUROC nº 22/2026 (ANEXO).
@@ -242,6 +291,14 @@ function calcAntt(){
 }
 function updateAndSave(){totalFixedCosts();calc();calcAntt();saveSettings();}
 loadSettings();
+document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{
+ const view=button.dataset.view;
+ $('dashboardView').hidden=view!=='dashboard';
+ $('calculatorView').hidden=view!=='calculator';
+ document.querySelectorAll('.nav-btn').forEach(item=>item.classList.toggle('active',item.dataset.view===view));
+ if(view==='calculator')window.scrollTo({top:0,behavior:'smooth'});
+ else window.scrollTo({top:0,behavior:'smooth'});
+}));
 $('operationProfile').addEventListener('change',()=>{updateDriverProfile();updateAndSave();});
 $('driverPercent').addEventListener('input',updateAndSave);
 ids.filter(id=>id!=='fixedMonthly').forEach(id=>$(id).addEventListener('input',updateAndSave));['paidOutbound','paidReturn'].forEach(id=>$(id).addEventListener('change',updateAndSave));
