@@ -1,4 +1,4 @@
-const CACHE_NAME = "calculadora-frete-v17-dashboard";
+const CACHE_NAME = "calculadora-frete-v18-historico";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
