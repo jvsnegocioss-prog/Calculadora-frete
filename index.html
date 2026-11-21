@@ -294,11 +294,12 @@
 <p class="small-help">A conferência do piso é feita por trecho marcado como pago, usando a distância correspondente e os coeficientes da tabela selecionada. Os custos operacionais são calculados separadamente. Confirme a classificação legal antes de usar o resultado em contrato.</p>
 </div>
       <div class="actions"><button class="btn" id="recalc">Recalcular</button><button class="btn2" id="reset">Restaurar exemplo</button><button class="btn2" id="clearSaved">Apagar dados salvos</button><button class="btn2" id="share">Compartilhar resumo</button></div><p id="saveStatus" class="small-help" role="status">Seus dados são salvos neste aparelho.</p>
+      <div class="breakdown" style="margin-top:14px"><h3>Backup e restauração dos dados</h3><p class="small-help" style="padding:0 12px">Salve uma cópia das configurações, viagens, veículos e despesas. O arquivo pode ser guardado fora deste aparelho e restaurado posteriormente.</p><div class="actions" style="padding:0 12px 12px;margin-top:8px"><button class="btn" type="button" id="exportBackup">Baixar backup completo</button><button class="btn2" type="button" id="importBackup">Restaurar backup</button><input id="backupFile" type="file" accept=".json,application/json" hidden></div><p class="small-help" id="backupFeedback" role="status" style="padding:0 12px 12px">A restauração substitui os dados locais atuais. Faça um backup antes de importar outro arquivo.</p></div>
       <p class="note">Estimativa operacional, não uma cotação oficial. O cálculo considera o retorno informado e custos digitados; confirme as despesas reais, tributos e condições do contrato.</p>
     </section>
   </div>
 </main>
-<footer>Calculadora de Frete • versão 0.9 • histórico local de viagens</footer>Calculadora de Frete • versão 0.8 • configurações salvas neste dispositivo</footer>
+<footer>Calculadora de Frete • versão 1.0 • backup local de dados</footer>
 <script>
 const storageKey='calculadoraFreteConfigV07';
 const defaults={operationProfile:'company',driverPercent:0,vehicle:'Carreta LS',freight:10000,loadType:'Carga Geral',outKm:800,backKm:800,returnType:'empty',returnFreight:0,hours:30,consumption:2.5,diesel:6.2,arla:150,toll:800,maintenance:0.63,trip:250,otherVariable:0,monthlyFinancing:4000,monthlyInsurance:500,monthlyTracking:150,monthlyAnnualFees:350,monthlyDriver:800,monthlyOtherFixed:200,fixedMonthly:6000,monthlyKm:10000,taxPercent:0,margin:20};
@@ -652,6 +653,64 @@ function exportFleetPdf(){
  win.document.open();win.document.write(htmlDoc);win.document.close();
  $('exportFeedback').textContent='Relatório preparado. Na janela aberta, use Imprimir e escolha Salvar como PDF.';
 }
+
+
+function createFullBackup(){
+ saveSettings();
+ const backup={
+  app:'Calculadora de Frete',
+  schemaVersion:1,
+  exportedAt:new Date().toISOString(),
+  data:{
+   config:localStorage.getItem(storageKey),
+   trips:localStorage.getItem(tripsStorageKey)||'[]',
+   vehicles:localStorage.getItem(vehiclesStorageKey)||'[]',
+   expenses:localStorage.getItem(expensesStorageKey)||'[]'
+  }
+ };
+ const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json;charset=utf-8'});
+ const date=new Date().toISOString().slice(0,10);
+ downloadBlob(blob,'backup-calculadora-frete-'+date+'.json');
+ $('backupFeedback').textContent='Backup completo gerado. Guarde o arquivo em local seguro; ele contém seus dados financeiros e operacionais.';
+}
+function validateFullBackup(backup){
+ if(!backup||backup.app!=='Calculadora de Frete'||backup.schemaVersion!==1||!backup.data||typeof backup.data!=='object')return false;
+ const d=backup.data;
+ if(typeof d.config!=='string'||!Array.isArray(JSON.parse(d.trips))||!Array.isArray(JSON.parse(d.vehicles))||!Array.isArray(JSON.parse(d.expenses)))return false;
+ const config=JSON.parse(d.config);
+ return !!config&&typeof config==='object'&&!Array.isArray(config);
+}
+function restoreFullBackup(file){
+ const reader=new FileReader();
+ reader.onload=()=>{
+  let backup;
+  try{backup=JSON.parse(String(reader.result||''));if(!validateFullBackup(backup))throw new Error('Formato ou versão de backup inválidos.');}
+  catch(e){$('backupFeedback').textContent='Não foi possível importar: '+(e.message||'arquivo inválido');return;}
+  if(!confirm('Atenção: a restauração substituirá as configurações, viagens, veículos e despesas salvos neste aparelho. Deseja continuar?'))return;
+  const keys=[storageKey,tripsStorageKey,vehiclesStorageKey,expensesStorageKey],previous={};
+  keys.forEach(k=>previous[k]=localStorage.getItem(k));
+  try{
+   localStorage.setItem(storageKey,backup.data.config);
+   localStorage.setItem(tripsStorageKey,backup.data.trips);
+   localStorage.setItem(vehiclesStorageKey,backup.data.vehicles);
+   localStorage.setItem(expensesStorageKey,backup.data.expenses);
+   $('backupFeedback').textContent='Backup restaurado. Atualizando os dados exibidos...';
+   setTimeout(()=>location.reload(),250);
+  }catch(e){
+   keys.forEach(k=>{if(previous[k]===null)localStorage.removeItem(k);else localStorage.setItem(k,previous[k]);});
+   $('backupFeedback').textContent='Falha ao restaurar. Os dados anteriores foram preservados; verifique o espaço disponível.';
+  }
+ };
+ reader.onerror=()=>{$('backupFeedback').textContent='Não foi possível ler o arquivo selecionado.';};
+ reader.readAsText(file);
+}
+$('exportBackup').addEventListener('click',createFullBackup);
+$('importBackup').addEventListener('click',()=>$('backupFile').click());
+$('backupFile').addEventListener('change',event=>{
+ const file=event.target.files&&event.target.files[0];
+ if(file)restoreFullBackup(file);
+ event.target.value='';
+});
 
 document.getElementById('exportFleetPdf').addEventListener('click',exportFleetPdf);
 document.getElementById('exportFleetExcel').addEventListener('click',exportFleetExcel);
