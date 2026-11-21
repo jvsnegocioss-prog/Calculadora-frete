@@ -64,7 +64,7 @@ https://anttlegis.antt.gov.br/action/ActionDatalegis.php?acao=abrirTextoAto&cod_
 
 ## Backup e restauração dos dados
 
-A aplicação oferece exportação de um arquivo JSON com as configurações, histórico de viagens, cadastro de veículos e despesas avulsas. O arquivo pode ser guardado em outro local e importado posteriormente. A restauração substitui os dados locais atuais e exige confirmação. Recomenda-se gerar um backup atualizado antes de restaurar outro arquivo. O backup contém informações financeiras e operacionais; mantenha-o em local seguro.
+A aplicação oferece exportação de um arquivo JSON com as configurações, histórico de viagens, cadastro de veículos e despesas avulsas. O arquivo pode ser guardado em outro local e importado posteriormente. A importação verifica a estrutura JSON e os tipos de registros antes de substituir os dados locais, aceita arquivos de até 25 MB e exige confirmação. Recomenda-se gerar um backup atualizado antes de restaurar outro arquivo. O backup contém informações financeiras e operacionais; mantenha-o em local seguro.
 
 ## Salvamento e privacidade dos dados
 
@@ -84,7 +84,7 @@ O projeto é uma Progressive Web App (PWA), com manifesto e Service Worker para 
 - sw.js: cache e estratégia básica de funcionamento offline.
 - icon-192.png e icon-512.png: ícones da aplicação.
 
-O rodapé da interface identifica a versão funcional como **1.0**. O Service Worker utiliza o identificador de cache **calculadora-frete-v25-backup-restauracao**; esse identificador controla a atualização do cache.
+O rodapé da interface identifica a versão funcional como **1.0**. O Service Worker utiliza o identificador de cache **calculadora-frete-v26-backup-validado**; esse identificador controla a atualização do cache.
 
 ## Atualização do projeto
 
