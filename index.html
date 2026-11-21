@@ -350,6 +350,7 @@ function editTrip(id){
  const trip=savedTrips.find(t=>t.id===id);if(!trip)return;
  editingTripId=id;$('tripDate').value=trip.date||'';$('tripClient').value=trip.client||'';$('tripOrigin').value=trip.origin||'';$('tripDestination').value=trip.destination||'';$('tripStatus').value=trip.status||'planejada';$('tripNotes').value=trip.notes||'';
  if(trip.snapshot&&trip.snapshot.inputs){Object.entries(trip.snapshot.inputs).forEach(([key,value])=>{if($(key))$(key).value=value;});updateDriverProfile();totalFixedCosts();calc();calcAntt();}
+ $('fleetVehicleId').value=trip.vehicleId||((trip.snapshot&&trip.snapshot.inputs&&trip.snapshot.inputs.fleetVehicleId)||'');
  $('saveTrip').textContent='Atualizar viagem';$('cancelEditTrip').hidden=false;$('historyFeedback').textContent='Edite os dados da viagem e salve a atualização.';window.scrollTo({top:0,behavior:'smooth'});
 }
 function openHistory(){ $('dashboardView').hidden=true;$('calculatorView').hidden=true;$('historyView').hidden=false;$('vehicleView').hidden=true;document.querySelectorAll('.nav-btn').forEach(item=>item.classList.toggle('active',item.dataset.view==='history'));renderTrips();window.scrollTo({top:0,behavior:'smooth'});}
