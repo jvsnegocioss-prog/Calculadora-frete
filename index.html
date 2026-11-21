@@ -53,6 +53,23 @@
       <article class="dashboard-card"><span>Quilometragem registrada</span><strong id="dashKm">0 km</strong><small>Soma das distâncias das viagens</small></article>
       <article class="dashboard-card"><span>Aguardando recebimento</span><strong id="dashHour">R$ 0,00</strong><small>Valor das viagens marcadas como pendentes</small></article>
     </div>
+    <section class="dashboard-panel" style="margin:18px 0;padding:20px">
+      <div class="dashboard-heading" style="margin-bottom:14px">
+        <div><span class="eyebrow">CONTROLE FINANCEIRO</span><h3 style="margin:4px 0">Relatório financeiro mensal</h3><p>Consulte os valores das viagens registradas por mês.</p></div>
+        <label for="reportMonth" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">Mês <input id="reportMonth" type="month" style="max-width:180px;padding:10px;border:1px solid var(--line);border-radius:10px"></label>
+      </div>
+      <div class="dashboard-grid">
+        <article class="dashboard-card featured"><span>Faturamento do mês</span><strong id="monthRevenue">R$ 0,00</strong><small>Fretes registrados no período</small></article>
+        <article class="dashboard-card"><span>Valores recebidos</span><strong id="monthReceived">R$ 0,00</strong><small>Viagens marcadas como recebidas</small></article>
+        <article class="dashboard-card"><span>A receber</span><strong id="monthPending">R$ 0,00</strong><small>Viagens marcadas como pendentes</small></article>
+        <article class="dashboard-card"><span>Despesas registradas</span><strong id="monthCosts">R$ 0,00</strong><small>Custos estimados das viagens</small></article>
+        <article class="dashboard-card"><span>Resultado do mês</span><strong id="monthProfit">R$ 0,00</strong><small>Faturamento menos custos registrados</small></article>
+        <article class="dashboard-card"><span>Viagens concluídas</span><strong id="monthCompleted">0</strong><small>Concluídas ou recebidas</small></article>
+      </div>
+      <h3 style="margin:22px 0 10px">Evolução dos últimos 6 meses</h3>
+      <div id="monthlyTrend" style="overflow-x:auto"><p class="small-help">Nenhuma viagem registrada no período.</p></div>
+      <p class="small-help">O relatório considera a data informada em cada viagem. “Recebido” e “A receber” dependem da atualização manual do status no histórico. Registros planejados e em andamento entram no faturamento e no resultado estimado, mas não são contabilizados como recebidos.</p>
+    </section>
     <div class="dashboard-lower">
       <article class="dashboard-panel">
         <h3>Simulação atual</h3>
@@ -238,7 +255,29 @@ function currentTripSnapshot(){
 function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
 function parseMoneyText(value){return Number(String(value||'').replace(/[^0-9,.-]/g,'').replace(/\.(?=.*\.)/g,'').replace(',','.'))||0;}
 function tripKmValue(trip){const snapshot=trip.snapshot&&trip.snapshot.inputs?trip.snapshot.inputs:{};const km=Number(snapshot.outKm||0)+Number(snapshot.backKm||0);return km||parseMoneyText(trip.km);}
+function localMonthKey(date){return String(date||'').slice(0,7);}
+function currentMonthKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function monthTitle(key){const [year,month]=key.split('-').map(Number);return new Intl.DateTimeFormat('pt-BR',{month:'short',year:'numeric'}).format(new Date(year,month-1,1));}
+function monthlyTotals(key){
+ const trips=savedTrips.filter(t=>localMonthKey(t.date)===key);
+ return {trips,revenue:trips.reduce((n,t)=>n+(Number(t.revenueValue)||0),0),costs:trips.reduce((n,t)=>n+(Number(t.costValue)||0),0),profit:trips.reduce((n,t)=>n+(Number(t.profitValue)||0),0),received:trips.filter(t=>t.status==='recebida').reduce((n,t)=>n+(Number(t.revenueValue)||0),0),pending:trips.filter(t=>t.status==='pendente').reduce((n,t)=>n+(Number(t.revenueValue)||0),0),completed:trips.filter(t=>t.status==='concluida'||t.status==='recebida').length};
+}
+function updateMonthlyReport(){
+ const input=$('reportMonth');if(!input)return;
+ if(!input.value)input.value=currentMonthKey();
+ const key=input.value,totals=monthlyTotals(key);
+ $('monthRevenue').textContent=money(totals.revenue);
+ $('monthReceived').textContent=money(totals.received);
+ $('monthPending').textContent=money(totals.pending);
+ $('monthCosts').textContent=money(totals.costs);
+ $('monthProfit').textContent=money(totals.profit);
+ $('monthCompleted').textContent=String(totals.completed);
+ const [year,month]=key.split('-').map(Number);
+ const keys=Array.from({length:6},(_,i)=>{const d=new Date(year,month-1-(5-i),1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');});
+ $('monthlyTrend').innerHTML='<table style="width:100%;border-collapse:collapse;min-width:540px"><thead><tr><th style="text-align:left;padding:9px;border-bottom:1px solid var(--line)">Mês</th><th style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">Faturamento</th><th style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">Custos</th><th style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">Resultado</th><th style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">Viagens</th></tr></thead><tbody>'+keys.map(k=>{const v=monthlyTotals(k);return '<tr><td style="padding:9px;border-bottom:1px solid var(--line)">'+escapeHtml(monthTitle(k))+'</td><td style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">'+money(v.revenue)+'</td><td style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">'+money(v.costs)+'</td><td style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">'+money(v.profit)+'</td><td style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">'+v.trips.length+'</td></tr>';}).join('')+'</tbody></table>';
+}
 function updateDashboard(){
+ updateMonthlyReport();
  const totalRevenue=savedTrips.reduce((sum,t)=>sum+(Number(t.revenueValue)||0),0);
  const totalProfit=savedTrips.reduce((sum,t)=>sum+(Number(t.profitValue)||0),0);
  const totalCosts=savedTrips.reduce((sum,t)=>sum+(Number(t.costValue)||0),0);
@@ -378,6 +417,8 @@ $('recalc').addEventListener('click',()=>{totalFixedCosts();calc();calcAntt();sa
 $('reset').addEventListener('click',()=>{Object.entries(defaults).forEach(([id,value])=>$(id).value=value);updateDriverProfile();$('operationType').value='unknown';$('anttVehicleType').value='complete';$('anttAxles').value='5';$('paidOutbound').checked=true;$('paidReturn').checked=false;totalFixedCosts();calc();calcAntt();saveSettings();});
 $('clearSaved').addEventListener('click',()=>{if(confirm('Apagar os dados salvos neste aparelho e restaurar os valores de exemplo?')){try{localStorage.removeItem(storageKey);}catch(e){}Object.entries(defaults).forEach(([id,value])=>$(id).value=value);updateDriverProfile();$('operationType').value='unknown';$('anttVehicleType').value='complete';$('anttAxles').value='5';$('paidOutbound').checked=true;$('paidReturn').checked=false;totalFixedCosts();calc();calcAntt();saveSettings();$('saveStatus').textContent='Dados anteriores apagados; valores de exemplo salvos novamente.';}});
 $('share').addEventListener('click',async()=>{const summary=`Calculadora de Frete\nPerfil da operação: ${$('operationProfile').value==='owner'?'Motorista autônomo':'Empresa com motorista contratado'}\nRemuneração percentual do motorista: ${$('detailDriverPercent').textContent}\nFaturamento bruto total: ${$('revenue').textContent}\nFrete de ida: ${money(num('freight'))}\nFrete de retorno: ${money(num('returnFreight'))}\nDistância total: ${$('totalKm').textContent}\nCustos estimados: ${$('totalCost').textContent}\nResultado estimado: ${$('profit').textContent}\nCusto/km: ${$('cpk').textContent}\nMargem: ${$('actualMargin').textContent}\nPiso ANTT exibido: ${$('anttFloor').textContent}; confirme a classificação.`;try{if(navigator.share)await navigator.share({title:'Resumo do frete',text:summary});else{await navigator.clipboard.writeText(summary);alert('Resumo copiado.')}}catch(e){}});
+$('reportMonth').value=currentMonthKey();
+$('reportMonth').addEventListener('change',updateMonthlyReport);
 readTrips();
  resetTripForm();
  $('saveTrip').addEventListener('click',saveCurrentTrip);
