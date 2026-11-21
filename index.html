@@ -85,6 +85,11 @@
         <article class="dashboard-card"><span>Viagens no período</span><strong id="fleetReportTrips">0</strong><small>Quantidade de registros no mês</small></article>
         <article class="dashboard-card"><span>Faturamento da frota</span><strong id="fleetReportRevenue">R$ 0,00</strong><small>Fretes registrados no mês</small></article>
       </div>
+      <div class="actions" style="margin:4px 0 16px">
+        <button class="btn" type="button" id="exportFleetPdf">Exportar relatório em PDF</button>
+        <button class="btn2" type="button" id="exportFleetExcel">Exportar planilha Excel</button>
+      </div>
+      <p id="exportFeedback" class="small-help" role="status">Os arquivos usam o mês selecionado e os dados salvos neste aparelho.</p>
       <h3 style="margin:22px 0 10px">Comparativo por veículo</h3>
       <div id="fleetVehicleReport" style="overflow-x:auto"><p class="small-help">Nenhum dado disponível para o período.</p></div>
       <h3 style="margin:22px 0 10px">Despesas por categoria</h3>
@@ -565,5 +570,91 @@ calcAntt();
 $('loadType').addEventListener('change',()=>{calcAntt();saveSettings();});
 $('operationType').addEventListener('change',()=>{calcAntt();saveSettings();});$('anttVehicleType').addEventListener('change',()=>{calcAntt();saveSettings();});$('anttAxles').addEventListener('change',()=>{calcAntt();saveSettings();});
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+
+function fleetExportData(){
+ const month=$('reportMonth').value||currentMonthKey();
+ const trips=savedTrips.filter(t=>localMonthKey(t.date)===month);
+ const expenses=fleetExpenses.filter(e=>localMonthKey(e.date)===month);
+ const revenue=trips.reduce((n,t)=>n+(Number(t.revenueValue)||0),0);
+ const costs=trips.reduce((n,t)=>n+(Number(t.costValue)||0),0);
+ const profit=trips.reduce((n,t)=>n+(Number(t.profitValue)||0),0);
+ const km=trips.reduce((n,t)=>n+tripKmValue(t),0);
+ const expenseTotal=expenses.reduce((n,e)=>n+(Number(e.amount)||0),0);
+ const vehicles=fleetVehicles.map(v=>{
+  const vt=trips.filter(t=>t.vehicleId===v.id),ve=expenses.filter(e=>e.vehicleId===v.id);
+  const vr=vt.reduce((n,t)=>n+(Number(t.revenueValue)||0),0),vc=vt.reduce((n,t)=>n+(Number(t.costValue)||0),0),vp=vt.reduce((n,t)=>n+(Number(t.profitValue)||0),0),vk=vt.reduce((n,t)=>n+tripKmValue(t),0),vx=ve.reduce((n,e)=>n+(Number(e.amount)||0),0);
+  return {name:v.name+(v.plate?' • '+v.plate:''),trips:vt.length,revenue:vr,costs:vc,profit:vp,km:vk,cpk:vk>0?vc/vk:0,expenses:vx};
+ }).filter(v=>v.trips||v.expenses).sort((a,b)=>b.profit-a.profit);
+ const orphanTrips=trips.filter(t=>!t.vehicleId||!fleetVehicles.some(v=>v.id===t.vehicleId));
+ if(orphanTrips.length)vehicles.push({name:'Sem veículo identificado',trips:orphanTrips.length,revenue:orphanTrips.reduce((n,t)=>n+(Number(t.revenueValue)||0),0),costs:orphanTrips.reduce((n,t)=>n+(Number(t.costValue)||0),0),profit:orphanTrips.reduce((n,t)=>n+(Number(t.profitValue)||0),0),km:orphanTrips.reduce((n,t)=>n+tripKmValue(t),0),cpk:0,expenses:0});
+ const orphanExpenses=expenses.filter(e=>!e.vehicleId||!fleetVehicles.some(v=>v.id===e.vehicleId));
+ const orphanExpenseTotal=orphanExpenses.reduce((n,e)=>n+(Number(e.amount)||0),0);
+ if(orphanExpenseTotal)vehicles.push({name:'Despesas sem veículo identificado',trips:0,revenue:0,costs:0,profit:0,km:0,cpk:0,expenses:orphanExpenseTotal});
+ const cats={};expenses.forEach(e=>{const k=e.category||'Outros';cats[k]=(cats[k]||0)+(Number(e.amount)||0);});
+ const categories=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value,share:expenseTotal?value/expenseTotal*100:0}));
+ return {month,trips,expenses,revenue,costs,profit,km,expenseTotal,adjusted:profit-expenseTotal,vehicles,categories};
+}
+function xmlEscape(value){
+ return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+function excelCell(value){
+ if(typeof value==='number'&&Number.isFinite(value))return '<Cell><Data ss:Type="Number">'+value+'</Data></Cell>';
+ return '<Cell><Data ss:Type="String">'+xmlEscape(value)+'</Data></Cell>';
+}
+function excelSheet(name,rows){
+ return '<Worksheet ss:Name="'+xmlEscape(name)+'"><Table>'+rows.map(row=>'<Row>'+row.map(excelCell).join('')+'</Row>').join('')+'</Table></Worksheet>';
+}
+function downloadBlob(blob,filename){
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+function exportFleetExcel(){
+ const d=fleetExportData(),moneyNum=n=>Number(n)||0;
+ const summary=[
+  ['RELATÓRIO FINANCEIRO DA FROTA',monthTitle(d.month)],
+  ['Gerado em',new Date().toLocaleString('pt-BR')],
+  ['Faturamento',d.revenue],['Custos das viagens',d.costs],['Resultado das viagens',d.profit],
+  ['Despesas avulsas',d.expenseTotal],['Resultado após despesas avulsas (visão gerencial)',d.adjusted],
+  ['Quilometragem',d.km],['Quantidade de viagens',d.trips.length],
+  ['Observação','Despesas avulsas podem se sobrepor aos custos já incluídos nas viagens.']
+ ];
+ const vehicleRows=[['Veículo','Viagens','Faturamento (R$)','Custos das viagens (R$)','Resultado (R$)','Km','Custo por km (R$)','Despesas avulsas (R$)'],...d.vehicles.map(v=>[v.name,v.trips,v.revenue,v.costs,v.profit,v.km,v.cpk,v.expenses])];
+ vehicleRows.push(['TOTAL DA FROTA',d.trips.length,d.revenue,d.costs,d.profit,d.km,d.km?d.costs/d.km:0,d.expenseTotal]);
+ const categoryRows=[['Categoria','Valor (R$)','Participação (%)'],...d.categories.map(c=>[c.name,c.value,c.share])];
+ categoryRows.push(['TOTAL',d.expenseTotal,100]);
+ const tripRows=[['Data','Cliente','Origem','Destino','Veículo','Status','Faturamento (R$)','Custos (R$)','Resultado (R$)','Km','Observações'],...d.trips.map(t=>[t.date||'',t.client||'',t.origin||'',t.destination||'',t.vehicleName||'Sem veículo identificado',t.status||'',moneyNum(t.revenueValue),moneyNum(t.costValue),moneyNum(t.profitValue),tripKmValue(t),t.notes||''])];
+ const expenseRows=[['Data','Veículo','Categoria','Valor (R$)','Quilometragem','Descrição','Observações'],...d.expenses.map(e=>[e.date||'',e.vehicleName||'Sem veículo identificado',e.category||'Outros',moneyNum(e.amount),e.odometer??'',e.description||'',e.notes||''])];
+ const xml='<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+excelSheet('Resumo',summary)+excelSheet('Veículos',vehicleRows)+excelSheet('Despesas por categoria',categoryRows)+excelSheet('Viagens',tripRows)+excelSheet('Despesas',expenseRows)+'</Workbook>';
+ const blob=new Blob(['\ufeff',xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+ downloadBlob(blob,'relatorio-frota-'+d.month+'.xls');
+ $('exportFeedback').textContent='Planilha Excel gerada com 5 abas para '+monthTitle(d.month)+'.';
+}
+function exportFleetPdf(){
+ const d=fleetExportData(),win=window.open('','_blank');
+ if(!win){$('exportFeedback').textContent='O navegador bloqueou a janela do PDF. Permita pop-ups para este site e tente novamente.';return;}
+ const table=(headers,rows)=>'<table><thead><tr>'+headers.map(x=>'<th>'+xmlEscape(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(x=>'<td>'+xmlEscape(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+ const vehicleRows=d.vehicles.map(v=>[v.name,String(v.trips),money(v.revenue),money(v.costs),money(v.profit),new Intl.NumberFormat('pt-BR').format(v.km)+' km',money(v.cpk),money(v.expenses)]);
+ vehicleRows.push(['TOTAL DA FROTA',String(d.trips.length),money(d.revenue),money(d.costs),money(d.profit),new Intl.NumberFormat('pt-BR').format(d.km)+' km',money(d.km?d.costs/d.km:0),money(d.expenseTotal)]);
+ const categoryRows=d.categories.map(c=>[c.name,money(c.value),pct(c.share)]);
+ const tripRows=d.trips.map(t=>[t.date||'',(t.origin||'')+' → '+(t.destination||''),t.vehicleName||'Sem veículo',money(Number(t.revenueValue)||0),money(Number(t.costValue)||0),money(Number(t.profitValue)||0)]);
+ const expenseRows=d.expenses.map(e=>[e.date||'',e.vehicleName||'Sem veículo',e.category||'Outros',money(Number(e.amount)||0),e.description||'']);
+ const htmlDoc='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório financeiro - '+xmlEscape(d.month)+'</title><style>'+
+ '@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font:11px Arial,sans-serif;color:#172b3a;margin:0}h1{font-size:21px;margin:0 0 4px}h2{font-size:14px;margin:22px 0 8px}p{color:#526575;margin:4px 0 12px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.metric{border:1px solid #ccd7df;padding:9px;border-radius:6px}.metric b{display:block;font-size:15px;margin-top:4px}table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:9px}th,td{border:1px solid #d5dee5;padding:6px;text-align:left}th{background:#edf3f6}tr:last-child{font-weight:bold}.note{font-size:9px;color:#526575}.actions{margin:14px 0}@media print{.actions{display:none}}</style></head><body>'+
+ '<div class="actions"><button onclick="window.print()">Imprimir / Salvar em PDF</button></div><h1>Relatório financeiro da frota</h1><p>Período: '+xmlEscape(monthTitle(d.month))+' • Gerado em '+xmlEscape(new Date().toLocaleString('pt-BR'))+'</p>'+
+ '<div class="summary">'+[['Faturamento',money(d.revenue)],['Custos das viagens',money(d.costs)],['Resultado das viagens',money(d.profit)],['Despesas avulsas',money(d.expenseTotal)],['Resultado após despesas avulsas',money(d.adjusted)],['Quilometragem',new Intl.NumberFormat('pt-BR').format(d.km)+' km'],['Viagens',String(d.trips.length)],['Média de faturamento/viagem',money(d.trips.length?d.revenue/d.trips.length:0)]].map(x=>'<div class="metric">'+xmlEscape(x[0])+'<b>'+xmlEscape(x[1])+'</b></div>').join('')+'</div>'+
+ '<h2>Comparativo por veículo</h2>'+table(['Veículo','Viagens','Faturamento','Custos','Resultado','Km','Custo/km','Despesas avulsas'],vehicleRows)+
+ '<h2>Despesas por categoria</h2>'+table(['Categoria','Valor','Participação'],categoryRows)+
+ '<h2>Viagens do período</h2>'+table(['Data','Rota','Veículo','Faturamento','Custos','Resultado'],tripRows)+
+ '<h2>Despesas avulsas do período</h2>'+table(['Data','Veículo','Categoria','Valor','Descrição'],expenseRows)+
+ '<p class="note">Atenção: o resultado das viagens já desconta os custos lançados em cada viagem. As despesas avulsas são exibidas separadamente; o resultado após despesas avulsas é uma visão gerencial e pode duplicar custos. Não representa lucro contábil definitivo.</p>'+
+ '<script>window.onload=function(){setTimeout(function(){window.print()},350)};<\/script></body></html>';
+ win.document.open();win.document.write(htmlDoc);win.document.close();
+ $('exportFeedback').textContent='Relatório preparado. Na janela aberta, use Imprimir e escolha Salvar como PDF.';
+}
+
+document.getElementById('exportFleetPdf').addEventListener('click',exportFleetPdf);
+document.getElementById('exportFleetExcel').addEventListener('click',exportFleetExcel);
+
 </script>
 </body></html>
