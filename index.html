@@ -656,36 +656,60 @@ function exportFleetPdf(){
 
 
 function createFullBackup(){
- saveSettings();
- const backup={
-  app:'Calculadora de Frete',
-  schemaVersion:1,
-  exportedAt:new Date().toISOString(),
-  data:{
-   config:localStorage.getItem(storageKey),
-   trips:localStorage.getItem(tripsStorageKey)||'[]',
-   vehicles:localStorage.getItem(vehiclesStorageKey)||'[]',
-   expenses:localStorage.getItem(expensesStorageKey)||'[]'
-  }
- };
- const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json;charset=utf-8'});
- const date=new Date().toISOString().slice(0,10);
- downloadBlob(blob,'backup-calculadora-frete-'+date+'.json');
- $('backupFeedback').textContent='Backup completo gerado. Guarde o arquivo em local seguro; ele contém seus dados financeiros e operacionais.';
+ try{
+  saveSettings();
+  const config=localStorage.getItem(storageKey);
+  if(!config)throw new Error('As configurações não estão disponíveis no armazenamento local.');
+  const backup={
+   app:'Calculadora de Frete',
+   schemaVersion:1,
+   exportedAt:new Date().toISOString(),
+   data:{
+    config,
+    trips:localStorage.getItem(tripsStorageKey)||'[]',
+    vehicles:localStorage.getItem(vehiclesStorageKey)||'[]',
+    expenses:localStorage.getItem(expensesStorageKey)||'[]'
+   }
+  };
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json;charset=utf-8'});
+  const date=new Date().toISOString().slice(0,10);
+  downloadBlob(blob,'backup-calculadora-frete-'+date+'.json');
+  $('backupFeedback').textContent='Backup completo gerado. Guarde o arquivo em local seguro; ele contém dados financeiros e operacionais.';
+ }catch(e){
+  $('backupFeedback').textContent='Não foi possível gerar o backup: '+(e.message||'erro no armazenamento local.');
+ }
 }
 function validateFullBackup(backup){
- if(!backup||backup.app!=='Calculadora de Frete'||backup.schemaVersion!==1||!backup.data||typeof backup.data!=='object')return false;
+ if(!backup||backup.app!=='Calculadora de Frete'||backup.schemaVersion!==1||!backup.data||typeof backup.data!=='object'||Array.isArray(backup.data))return false;
  const d=backup.data;
- if(typeof d.config!=='string'||!Array.isArray(JSON.parse(d.trips))||!Array.isArray(JSON.parse(d.vehicles))||!Array.isArray(JSON.parse(d.expenses)))return false;
- const config=JSON.parse(d.config);
- return !!config&&typeof config==='object'&&!Array.isArray(config);
+ if(typeof d.config!=='string'||typeof d.trips!=='string'||typeof d.vehicles!=='string'||typeof d.expenses!=='string')return false;
+ let config,trips,vehicles,expenses;
+ try{
+  config=JSON.parse(d.config);
+  trips=JSON.parse(d.trips);
+  vehicles=JSON.parse(d.vehicles);
+  expenses=JSON.parse(d.expenses);
+ }catch(e){return false;}
+ const plainObject=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
+ const recordArray=value=>Array.isArray(value)&&value.every(plainObject);
+ return plainObject(config)&&recordArray(trips)&&recordArray(vehicles)&&recordArray(expenses);
 }
 function restoreFullBackup(file){
+ if(!file)return;
+ if(file.size>25*1024*1024){
+  $('backupFeedback').textContent='Arquivo muito grande. O limite para restauração é de 25 MB.';
+  return;
+ }
  const reader=new FileReader();
  reader.onload=()=>{
   let backup;
-  try{backup=JSON.parse(String(reader.result||''));if(!validateFullBackup(backup))throw new Error('Formato ou versão de backup inválidos.');}
-  catch(e){$('backupFeedback').textContent='Não foi possível importar: '+(e.message||'arquivo inválido');return;}
+  try{
+   backup=JSON.parse(String(reader.result||''));
+   if(!validateFullBackup(backup))throw new Error('Formato, conteúdo ou versão de backup inválidos.');
+  }catch(e){
+   $('backupFeedback').textContent='Não foi possível importar: '+(e.message||'arquivo inválido');
+   return;
+  }
   if(!confirm('Atenção: a restauração substituirá as configurações, viagens, veículos e despesas salvos neste aparelho. Deseja continuar?'))return;
   const keys=[storageKey,tripsStorageKey,vehiclesStorageKey,expensesStorageKey],previous={};
   keys.forEach(k=>previous[k]=localStorage.getItem(k));
@@ -694,11 +718,17 @@ function restoreFullBackup(file){
    localStorage.setItem(tripsStorageKey,backup.data.trips);
    localStorage.setItem(vehiclesStorageKey,backup.data.vehicles);
    localStorage.setItem(expensesStorageKey,backup.data.expenses);
-   $('backupFeedback').textContent='Backup restaurado. Atualizando os dados exibidos...';
+   $('backupFeedback').textContent='Backup validado e restaurado. Atualizando os dados exibidos...';
    setTimeout(()=>location.reload(),250);
   }catch(e){
-   keys.forEach(k=>{if(previous[k]===null)localStorage.removeItem(k);else localStorage.setItem(k,previous[k]);});
-   $('backupFeedback').textContent='Falha ao restaurar. Os dados anteriores foram preservados; verifique o espaço disponível.';
+   let rollbackOk=true;
+   keys.forEach(k=>{
+    try{if(previous[k]===null)localStorage.removeItem(k);else localStorage.setItem(k,previous[k]);}
+    catch(rollbackError){rollbackOk=false;}
+   });
+   $('backupFeedback').textContent=rollbackOk
+    ?'Falha ao restaurar. Os dados anteriores foram preservados; verifique o espaço disponível.'
+    :'Falha ao restaurar e não foi possível confirmar a recuperação de todos os dados. Não feche a página; tente exportar um backup imediatamente.';
   }
  };
  reader.onerror=()=>{$('backupFeedback').textContent='Não foi possível ler o arquivo selecionado.';};
