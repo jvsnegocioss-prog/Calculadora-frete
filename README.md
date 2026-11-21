@@ -62,6 +62,10 @@ A comparação considera valores arredondados a centavos. Quando não existe coe
 Portaria SUROC nº 22/2026 — ANTT:  
 https://anttlegis.antt.gov.br/action/ActionDatalegis.php?acao=abrirTextoAto&cod_menu=7804&cod_modulo=161&link=S&numeroAto=00000022&orgao=SUROC/ANTT/MT&seqAto=000&tipo=POR&valorAno=2026
 
+## Backup e restauração dos dados
+
+A aplicação oferece exportação de um arquivo JSON com as configurações, histórico de viagens, cadastro de veículos e despesas avulsas. O arquivo pode ser guardado em outro local e importado posteriormente. A restauração substitui os dados locais atuais e exige confirmação. Recomenda-se gerar um backup atualizado antes de restaurar outro arquivo. O backup contém informações financeiras e operacionais; mantenha-o em local seguro.
+
 ## Salvamento e privacidade dos dados
 
 - As configurações são salvas automaticamente no armazenamento local do navegador/aparelho (localStorage).
@@ -80,7 +84,7 @@ O projeto é uma Progressive Web App (PWA), com manifesto e Service Worker para 
 - sw.js: cache e estratégia básica de funcionamento offline.
 - icon-192.png e icon-512.png: ícones da aplicação.
 
-O rodapé da interface identifica a versão funcional como **0.7**. O Service Worker utiliza o identificador de cache **calculadora-frete-v15-comparacao-piso**; esse identificador controla a atualização do cache e não representa a versão funcional exibida no rodapé.
+O rodapé da interface identifica a versão funcional como **1.0**. O Service Worker utiliza o identificador de cache **calculadora-frete-v25-backup-restauracao**; esse identificador controla a atualização do cache.
 
 ## Atualização do projeto
 
