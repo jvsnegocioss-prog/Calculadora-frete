@@ -1,4 +1,4 @@
-const CACHE_NAME = "calculadora-frete-v21-gestao-veiculos";
+const CACHE_NAME = "calculadora-frete-v22-despesas-veiculos";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
